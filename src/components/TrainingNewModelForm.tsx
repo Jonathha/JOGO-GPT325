@@ -41,7 +41,7 @@ export function TrainingNewModelForm({ currentDay, models, onCreateModel }: Form
   const [strategy, setStrategy] = useState<TrainingStrategy>('FROM_SCRATCH');
   const [baseModelId, setBaseModelId] = useState('');
   const [imageResolution, setImageResolution] = useState<ModelProject['imageResolution']>('1024px');
-  const baseModels = models.filter((model) => model.isCompleted);
+  const baseModels = models.filter((model) => model.isCompleted && (strategy !== 'DISTILLATION' || model.modality === (archChoice === 'DIFFUSION_VISION' ? 'IMAGE' : 'TEXT')));
   const needsBase = strategy !== 'FROM_SCRATCH';
   const baseModel = baseModels.find((model) => model.id === baseModelId) ?? null;
   const handleSubmit = (event: React.FormEvent) => {
