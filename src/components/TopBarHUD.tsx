@@ -61,7 +61,7 @@ export function TopBarHUD(props: TopBarHUDProps): React.JSX.Element {
       </nav>
 
       {/* Zone 2: Central telemetry metrics strip */}
-      <div className="hidden xl:flex min-w-0 flex-1 items-center justify-center">
+      <div className="hidden 2xl:flex min-w-0 flex-1 items-center justify-center">
         <TopBarMetricsStrip state={state} />
       </div>
 

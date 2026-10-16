@@ -177,7 +177,7 @@ export default function App(): React.JSX.Element {
 
       {/* Separate world views: the city is a demonstration map, never part of the office. */}
       {activeView === 'office' ? (
-        <div className="absolute inset-0 pt-[52px]">
+        <div className="absolute inset-x-0 bottom-0 top-[52px] overflow-hidden">
           <IsometricOfficeStage state={state} onSelectWorker={(id) => setState((prev) => ({ ...prev, selectedWorkerId: id }))} />
         </div>
       ) : (
