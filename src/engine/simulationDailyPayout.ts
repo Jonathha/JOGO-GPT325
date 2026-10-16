@@ -66,7 +66,7 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
       ? Math.max(0.35, Math.min(1.25, 1.15 - (model.pricePerMillionOutput / averageRivalOutputPrice) * 0.3))
       : 1;
     const acquisition = model.pricingMode === 'FREE'
-      ? Math.round((10 + quality * 24) * reputationFactor * competitiveFactor)
+      ? Math.round((model.modality === 'IMAGE' ? 7 : 10) + quality * (model.modality === 'IMAGE' ? 18 : 24) * reputationFactor * competitiveFactor)
       : Math.max(0, Math.round((3 + quality * 9) * reputationFactor * competitiveFactor * priceFactor));
     const churnRate = model.pricingMode === 'FREE' ? 0.012 : 0.025;
     const activeUsers = Math.max(0, Math.round(model.activeUsers * (1 - churnRate)) + acquisition);
@@ -78,11 +78,17 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
     const inputCostPerMillion = 0.04 + model.paramsBillion * 0.002;
     const outputCostPerMillion = 0.08 + model.paramsBillion * 0.006;
     const averageDailyUsers = (model.activeUsers + activeUsers) / 2;
-    const dailyApiRevenue = averageDailyUsers * requestsPerUser *
-      (inputTokensPerRequest * inputPrice + outputTokensPerRequest * outputPrice) / 1_000_000;
-    const dailyInferenceCost = averageDailyUsers * requestsPerUser *
-      (inputTokensPerRequest * inputCostPerMillion + outputTokensPerRequest * outputCostPerMillion) / 1_000_000;
-    return { ...model, activeUsers, dailyNewUsers: acquisition, dailyApiRevenue, dailyInferenceCost };
+    const dailyImageGenerations = model.modality === 'IMAGE'
+      ? Math.round(averageDailyUsers * (model.pricingMode === 'FREE' ? 1.5 : 1.1)) : 0;
+    const imageResolutionFactor = model.imageResolution === '2048px' ? 2.8 : model.imageResolution === '1024px' ? 1.5 : 1;
+    const imageCostPerGeneration = (0.012 + model.paramsBillion * 0.00015) * imageResolutionFactor;
+    const dailyApiRevenue = model.modality === 'IMAGE'
+      ? (model.pricingMode === 'PAID' ? dailyImageGenerations * model.pricePerImage : 0)
+      : averageDailyUsers * requestsPerUser * (inputTokensPerRequest * inputPrice + outputTokensPerRequest * outputPrice) / 1_000_000;
+    const dailyInferenceCost = model.modality === 'IMAGE'
+      ? dailyImageGenerations * imageCostPerGeneration
+      : averageDailyUsers * requestsPerUser * (inputTokensPerRequest * inputCostPerMillion + outputTokensPerRequest * outputCostPerMillion) / 1_000_000;
+    return { ...model, activeUsers, dailyNewUsers: acquisition, dailyImageGenerations, dailyApiRevenue, dailyInferenceCost };
   });
   const dailyApiIncome = models.reduce((sum, model) => sum + model.dailyApiRevenue, 0);
   const dailyInferenceCost = models.reduce((sum, model) => sum + model.dailyInferenceCost, 0);
