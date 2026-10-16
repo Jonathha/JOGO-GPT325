@@ -29,26 +29,24 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
   const layoutTiles: OfficeTile[] = getOfficeLayoutForPhase(state.phase);
   const gridSize = state.phase === 'GARAGEM' ? 6 : state.phase === 'LOFT_STARTUP' ? 8 : state.phase === 'CAMPUS_IA' ? 10 : 12;
 
-  // Handle canvas resize & initial centering
+  // Size the canvas to its actual viewport (below the HUD), not the full window.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      if (camera.offsetX === 0 && camera.offsetY === 0) {
-        setCamera({
-          offsetX: canvas.width / 2,
-          offsetY: canvas.height / 3,
-          zoom: 1.1,
-        });
-      }
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.round(rect.width));
+      canvas.height = Math.max(1, Math.round(rect.height));
+      setCamera((current) => current.offsetX === 0 && current.offsetY === 0
+        ? { offsetX: canvas.width / 2, offsetY: canvas.height / 2.15, zoom: Math.min(1.1, canvas.width / 900) }
+        : current);
     };
 
+    const observer = new ResizeObserver(handleResize);
+    observer.observe(canvas);
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => observer.disconnect();
   }, []);
 
   // Main canvas animation and rendering loop
