@@ -8,7 +8,7 @@ interface TrainingModalProps {
   currentDay: number;
   onClose: () => void;
   onCreateModel: (model: ModelProject) => void;
-  onLaunchModel: (id: string, mode: 'FREE' | 'PAID') => void;
+  onLaunchModel: (id: string, mode: 'FREE' | 'PAID', inputPrice?: number, outputPrice?: number) => void;
 }
 
 /**
