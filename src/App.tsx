@@ -116,11 +116,11 @@ export default function App(): React.JSX.Element {
     }));
   };
 
-  const handleLaunchModel = (id: string, mode: 'FREE' | 'PAID') => {
+  const handleLaunchModel = (id: string, mode: 'FREE' | 'PAID', inputPrice = 0.5, outputPrice = 1.5) => {
     setState((prev) => ({
       ...prev,
       models: prev.models.map((model) => model.id === id && model.isCompleted && !model.isReleased
-        ? { ...model, isReleased: true, pricingMode: mode, dailyApiRevenue: 0, dailyInferenceCost: 0 }
+        ? { ...model, isReleased: true, pricingMode: mode, pricePerMillionInput: mode === 'PAID' ? inputPrice : 0, pricePerMillionOutput: mode === 'PAID' ? outputPrice : 0, dailyApiRevenue: 0, dailyInferenceCost: 0 }
         : model),
     }));
   };
