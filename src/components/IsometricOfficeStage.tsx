@@ -193,6 +193,29 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
     latestProps.current.onSelectWorker(clickedEmp?.id ?? null);
   };
 
+  const zoomAtCenter = (factor: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const centerX = canvas.clientWidth / 2;
+    const centerY = canvas.clientHeight / 2;
+    setCamera((prev) => {
+      const zoom = Math.max(0.55, Math.min(2.8, prev.zoom * factor));
+      const worldX = (centerX - prev.offsetX) / prev.zoom;
+      const worldY = (centerY - prev.offsetY) / prev.zoom;
+      return { zoom, offsetX: centerX - worldX * zoom, offsetY: centerY - worldY * zoom };
+    });
+  };
+
+  const resetCamera = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setCamera({
+      offsetX: canvas.clientWidth / 2,
+      offsetY: canvas.clientHeight / 2.15,
+      zoom: Math.max(0.65, Math.min(1.1, canvas.clientWidth / 900)),
+    });
+  };
+
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#141c1a]">
       <canvas
@@ -207,6 +230,15 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
         style={{ touchAction: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
         className="absolute inset-0 block h-full w-full crisp-canvas"
       />
+      <div className="pointer-events-none absolute bottom-4 left-4 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#101815]/85 px-3 py-2 text-[11px] text-[#d0ddd4] shadow-xl backdrop-blur-md sm:flex">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#a8d4b1]" />
+        Arraste para mover <span className="text-white/30">·</span> Scroll para aproximar
+      </div>
+      <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-xl border border-white/10 bg-[#101815]/90 p-1.5 text-[#d0ddd4] shadow-xl backdrop-blur-md">
+        <button type="button" aria-label="Diminuir zoom" title="Diminuir zoom" onClick={() => zoomAtCenter(1 / 1.2)} className="h-8 w-8 rounded-lg text-lg transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#b7d7bf]">−</button>
+        <button type="button" aria-label="Restaurar enquadramento" title="Restaurar enquadramento" onClick={resetCamera} className="min-w-14 rounded-lg px-2 py-2 text-[11px] font-medium tabular-nums transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#b7d7bf]">{Math.round(camera.zoom * 100)}%</button>
+        <button type="button" aria-label="Aumentar zoom" title="Aumentar zoom" onClick={() => zoomAtCenter(1.2)} className="h-8 w-8 rounded-lg text-lg transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#b7d7bf]">+</button>
+      </div>
     </div>
   );
 }
