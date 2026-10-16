@@ -93,6 +93,7 @@ export function updateModelTrainingStep(
       mmluScore: Math.round(Math.max(1, model.targetMmluScore - 8) + (model.targetMmluScore - Math.max(1, model.targetMmluScore - 8)) * progressRatio),
       codingScore: Math.round(Math.max(1, model.targetCodingScore - 8) + (model.targetCodingScore - Math.max(1, model.targetCodingScore - 8)) * progressRatio),
       mathScore: Math.round(Math.max(1, model.targetMathScore - 8) + (model.targetMathScore - Math.max(1, model.targetMathScore - 8)) * progressRatio),
+      imageQuality: model.modality === 'IMAGE' ? Math.round(Math.max(1, model.targetImageQuality - 12) + 12 * progressRatio) : model.imageQuality,
       currentLoss: parseFloat(newLoss.toFixed(3)),
       isCompleted: isNowFinished,
     };

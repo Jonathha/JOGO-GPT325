@@ -36,6 +36,7 @@ export type ArchitectureType = 'TRANSFORMER_DENSE' | 'MOE_SPARSE' | 'REASONING_R
 
 export type TrainingStrategy = 'FROM_SCRATCH' | 'FINE_TUNE' | 'CONTINUED' | 'DISTILLATION';
 export type TrainingStage = 'DATA_PREPARATION' | 'PRETRAINING' | 'POST_TRAINING' | 'EVALUATION' | 'READY';
+export type ModelModality = 'TEXT' | 'IMAGE';
 
 export interface ModelProject {
   id: string;
@@ -44,6 +45,10 @@ export interface ModelProject {
   paramsBillion: number;
   architecture: ArchitectureType;
   architectureName: string;
+  modality: ModelModality;
+  imageQuality: number;
+  targetImageQuality: number;
+  imageResolution: '512px' | '1024px' | '2048px';
   trainingStrategy: TrainingStrategy;
   trainingStage: TrainingStage;
   version: number;
@@ -69,6 +74,8 @@ export interface ModelProject {
   pricingMode: 'UNRELEASED' | 'FREE' | 'PAID';
   pricePerMillionInput: number;
   pricePerMillionOutput: number;
+  pricePerImage: number;
+  dailyImageGenerations: number;
   dailyInferenceCost: number;
   hypeBoost: number;
   creationDay: number;

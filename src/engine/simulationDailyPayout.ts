@@ -59,14 +59,15 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
   const averageRivalOutputPrice = rivals.reduce((sum, rival) => sum + rival.outputPrice, 0) / rivals.length;
   const models = state.models.map((model) => {
     if (!model.isCompleted || !model.isReleased) return model;
-    const quality = (model.mmluScore + model.codingScore + model.mathScore) / 300;
+    const quality = model.modality === 'IMAGE' ? model.imageQuality / 100 : (model.mmluScore + model.codingScore + model.mathScore) / 300;
+    const marketBenchmark = model.modality === 'IMAGE' ? 0.78 : bestRivalQuality;
     const reputationFactor = 0.7 + Math.max(0, Math.min(100, state.reputation)) / 100;
-    const competitiveFactor = quality >= bestRivalQuality ? 1.25 : quality >= bestRivalQuality - 0.05 ? 1 : 0.78;
+    const competitiveFactor = quality >= marketBenchmark ? 1.25 : quality >= marketBenchmark - 0.05 ? 1 : 0.78;
     const priceFactor = model.pricingMode === 'PAID'
-      ? Math.max(0.35, Math.min(1.25, 1.15 - (model.pricePerMillionOutput / averageRivalOutputPrice) * 0.3))
+      ? Math.max(0.35, Math.min(1.25, 1.15 - ((model.modality === 'IMAGE' ? model.pricePerImage / 0.08 : model.pricePerMillionOutput / averageRivalOutputPrice) * 0.3)))
       : 1;
     const acquisition = model.pricingMode === 'FREE'
-      ? Math.round((10 + quality * 24) * reputationFactor * competitiveFactor)
+      ? Math.round((model.modality === 'IMAGE' ? 7 : 10) + quality * (model.modality === 'IMAGE' ? 18 : 24) * reputationFactor * competitiveFactor)
       : Math.max(0, Math.round((3 + quality * 9) * reputationFactor * competitiveFactor * priceFactor));
     const churnRate = model.pricingMode === 'FREE' ? 0.012 : 0.025;
     const activeUsers = Math.max(0, Math.round(model.activeUsers * (1 - churnRate)) + acquisition);
@@ -78,11 +79,17 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
     const inputCostPerMillion = 0.04 + model.paramsBillion * 0.002;
     const outputCostPerMillion = 0.08 + model.paramsBillion * 0.006;
     const averageDailyUsers = (model.activeUsers + activeUsers) / 2;
-    const dailyApiRevenue = averageDailyUsers * requestsPerUser *
-      (inputTokensPerRequest * inputPrice + outputTokensPerRequest * outputPrice) / 1_000_000;
-    const dailyInferenceCost = averageDailyUsers * requestsPerUser *
-      (inputTokensPerRequest * inputCostPerMillion + outputTokensPerRequest * outputCostPerMillion) / 1_000_000;
-    return { ...model, activeUsers, dailyNewUsers: acquisition, dailyApiRevenue, dailyInferenceCost };
+    const dailyImageGenerations = model.modality === 'IMAGE'
+      ? Math.round(averageDailyUsers * (model.pricingMode === 'FREE' ? 1.5 : 1.1)) : 0;
+    const imageResolutionFactor = model.imageResolution === '2048px' ? 2.8 : model.imageResolution === '1024px' ? 1.5 : 1;
+    const imageCostPerGeneration = (0.012 + model.paramsBillion * 0.00015) * imageResolutionFactor;
+    const dailyApiRevenue = model.modality === 'IMAGE'
+      ? (model.pricingMode === 'PAID' ? dailyImageGenerations * model.pricePerImage : 0)
+      : averageDailyUsers * requestsPerUser * (inputTokensPerRequest * inputPrice + outputTokensPerRequest * outputPrice) / 1_000_000;
+    const dailyInferenceCost = model.modality === 'IMAGE'
+      ? dailyImageGenerations * imageCostPerGeneration
+      : averageDailyUsers * requestsPerUser * (inputTokensPerRequest * inputCostPerMillion + outputTokensPerRequest * outputCostPerMillion) / 1_000_000;
+    return { ...model, activeUsers, dailyNewUsers: acquisition, dailyImageGenerations, dailyApiRevenue, dailyInferenceCost };
   });
   const dailyApiIncome = models.reduce((sum, model) => sum + model.dailyApiRevenue, 0);
   const dailyInferenceCost = models.reduce((sum, model) => sum + model.dailyInferenceCost, 0);

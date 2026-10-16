@@ -88,6 +88,39 @@ describe('AI model lifecycle and market simulation', () => {
     expect(removeModelProject([first, second], first.id)).toEqual([second]);
   });
 
+  it('trains image models with selectable resolution and progressive image quality', () => {
+    const model = buildNewModelProject('Titan Vision', '14B', 'DIFFUSION_VISION', 1, 'FROM_SCRATCH', null, '2048px');
+    expect(model.modality).toBe('IMAGE');
+    expect(model.imageResolution).toBe('2048px');
+    expect(model.imageQuality).toBeLessThan(model.targetImageQuality);
+    const state = createDefaultCompanyState();
+    state.hasStarted = true;
+    state.hardware.totalTeraflops = 10000;
+    state.models = [model];
+    const next = updateModelTrainingStep(state, 1).models[0];
+    expect(next.imageQuality).toBeGreaterThan(model.imageQuality);
+    expect(next.imageQuality).toBeLessThanOrEqual(next.targetImageQuality);
+  });
+
+  it('charges the company for free image generation and earns per-image revenue on paid products', () => {
+    const state = createDefaultCompanyState();
+    const freeImage = buildNewModelProject('Free Canvas', '7B', 'DIFFUSION_VISION', 1);
+    Object.assign(freeImage, { isCompleted: true, isReleased: true, pricingMode: 'FREE', activeUsers: 80 });
+    const freeState = processEndOfDayFinances({ ...state, models: [freeImage] });
+    const freeResult = freeState.models[0];
+    expect(freeState.funds).toBeLessThan(state.funds);
+    expect(freeResult.dailyImageGenerations).toBeGreaterThan(0);
+    expect(freeResult.dailyApiRevenue).toBe(0);
+    expect(freeResult.dailyInferenceCost).toBeGreaterThan(0);
+
+    const paidImage = buildNewModelProject('Studio Canvas', '7B', 'DIFFUSION_VISION', 1);
+    Object.assign(paidImage, { isCompleted: true, isReleased: true, pricingMode: 'PAID', activeUsers: 80, pricePerImage: 0.15 });
+    const paidResult = processEndOfDayFinances({ ...state, models: [paidImage] }).models[0];
+    expect(paidResult.dailyImageGenerations).toBeGreaterThan(0);
+    expect(paidResult.dailyApiRevenue).toBeGreaterThan(0);
+    expect(paidResult.dailyInferenceCost).toBeGreaterThan(0);
+  });
+
   it('accounts for paid revenue and inference cost from token volume', () => {
     const state = createDefaultCompanyState();
     state.funds = 1_000_000;

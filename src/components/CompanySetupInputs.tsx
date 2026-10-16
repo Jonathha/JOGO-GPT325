@@ -17,13 +17,13 @@ interface ArchetypeOptionProps {
 export function ArchetypeSelectOption(props: ArchetypeOptionProps): React.JSX.Element {
   const { id, title, desc, perk, selected, onSelect } = props;
   const isSelected = selected === true;
-  const activeClass = 'border-sky-500 bg-sky-950/40 shadow-sm ring-1 ring-sky-500/30';
-  const inactiveClass = 'border-slate-800 bg-slate-900/40 hover:border-slate-700';
+  const activeClass = 'border-[#a7c0a7] bg-[#263b30] shadow-sm ring-1 ring-[#a7c0a7]/25';
+  const inactiveClass = 'border-[#314239] bg-[#121d18] hover:border-[#647b68]';
   const borderClass = isSelected ? activeClass : inactiveClass;
 
   // Render badge label for current focus state
   const statusLabel = isSelected ? 'Ativo' : 'Foco';
-  const statusColor = isSelected ? 'text-sky-400 font-medium' : 'text-slate-500';
+  const statusColor = isSelected ? 'text-[#c6d8c3] font-medium' : 'text-slate-500';
   const ariaState = isSelected ? 'true' : 'false';
   const buttonTitle = `Selecionar foco estratégico: ${title}`;
 
@@ -41,7 +41,7 @@ export function ArchetypeSelectOption(props: ArchetypeOptionProps): React.JSX.El
         <span className={`text-[10px] font-mono ${statusColor}`}>{statusLabel}</span>
       </div>
       <p className="text-[11px] text-slate-400 mb-2 leading-relaxed">{desc}</p>
-      <div className="text-[10px] font-mono text-emerald-400 bg-emerald-950/30 px-1.5 py-0.5 rounded inline-block">
+      <div className="text-[10px] font-mono text-[#c1d4bf] bg-[#273a2e] px-1.5 py-0.5 rounded inline-block">
         {perk}
       </div>
     </button>
@@ -74,7 +74,7 @@ export function CompanyIdentityFields(props: IdentityFieldsProps): React.JSX.Ele
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ex: Apex AI, Nova..."
-          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500"
+          className="w-full bg-[#0d1511] border border-[#3a4d40] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#a7c0a7]"
           required
         />
       </div>
