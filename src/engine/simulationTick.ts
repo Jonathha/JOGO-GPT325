@@ -73,7 +73,7 @@ export function updateModelTrainingStep(
 
     const newInvestedFlops = model.computeInvestedFlops + computeSharePerModel;
     const progressRatio = Math.min(1.0, newInvestedFlops / model.computeNeededFlops);
-    const progressPercent = isFinite(progressRatio) ? (progressRatio >= 1 ? 100 : Math.floor(progressRatio * 100)) : 0;
+    const progressPercent = Number.isFinite(progressRatio) ? (progressRatio >= 1 ? 100 : Math.floor(progressRatio * 100)) : 0;
     const isNowFinished = progressRatio >= 1.0;
     const trainingStage = progressRatio < 0.05 ? 'DATA_PREPARATION'
       : progressRatio < 0.85 ? 'PRETRAINING'
