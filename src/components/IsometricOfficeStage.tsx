@@ -20,13 +20,13 @@ interface StageProps {
 export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
   const { state, onSelectWorker } = props;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Viewport camera state (pan & zoom)
+  const [camera, setCamera] = useState({ offsetX: 0, offsetY: 0, zoom: 1.0 });
   const latestProps = useRef(props);
   const cameraRef = useRef(camera);
   latestProps.current = props;
   cameraRef.current = camera;
-
-  // Viewport camera state (pan & zoom)
-  const [camera, setCamera] = useState({ offsetX: 0, offsetY: 0, zoom: 1.0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, pointerX: 0, pointerY: 0 });
   const movedRef = useRef(false);
@@ -47,7 +47,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const context = canvas.getContext('2d');
       context?.setTransform(ratio, 0, 0, ratio, 0, 0);
       setCamera((current) => current.offsetX === 0 && current.offsetY === 0
-        ? { offsetX: canvas.width / 2, offsetY: canvas.height / 2.15, zoom: Math.max(0.65, Math.min(1.1, canvas.width / 900)) }
+        ? { offsetX: rect.width / 2, offsetY: rect.height / 2.15, zoom: Math.max(0.65, Math.min(1.1, rect.width / 900)) }
         : current);
     };
 
@@ -73,7 +73,6 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const currentCamera = cameraRef.current;
       const currentTiles = getOfficeLayoutForPhase(currentState.phase);
       const currentGridSize = currentState.phase === 'GARAGEM' ? 6 : currentState.phase === 'LOFT_STARTUP' ? 8 : currentState.phase === 'CAMPUS_IA' ? 10 : 12;
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
       const viewWidth = canvas.clientWidth;
       const viewHeight = canvas.clientHeight;
       ctx.clearRect(0, 0, viewWidth, viewHeight);
@@ -99,7 +98,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       }
 
       // 3. Draw office furniture & interactive props
-      layoutTiles.forEach((tile) => {
+      currentTiles.forEach((tile) => {
         const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, tileW, tileH, 0, 0);
         if (tile.type === 'DESK') {
           const hasWorker = currentState.employees.some((e) => Math.round(e.x) === tile.x && Math.round(e.y) === tile.y);
