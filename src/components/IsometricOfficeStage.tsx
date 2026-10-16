@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CompanyState, Employee, ModelProject, OfficeTile } from '../types/gameTypes';
+import { CompanyState } from '../types/gameTypes';
 import { getOfficeLayoutForPhase } from '../data/officeLayouts';
 import { gridToIsometricScreen, isometricScreenToGrid } from '../engine/isometricMath';
 import { drawFloorTile, drawPerimeterWalls } from '../engine/drawOfficeFloors';
@@ -18,7 +18,7 @@ interface StageProps {
  * Supports pan, click selection, and smooth 2:1 dimetric projection.
  */
 export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
-  const { state, onSelectWorker } = props;
+  const { onSelectWorker } = props;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Viewport camera state (pan & zoom)
@@ -30,9 +30,6 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, pointerX: 0, pointerY: 0 });
   const movedRef = useRef(false);
-
-  const layoutTiles: OfficeTile[] = getOfficeLayoutForPhase(state.phase);
-  const gridSize = state.phase === 'GARAGEM' ? 6 : state.phase === 'LOFT_STARTUP' ? 8 : state.phase === 'CAMPUS_IA' ? 10 : 12;
 
   // Size the canvas to its actual viewport (below the HUD), not the full window.
   useEffect(() => {
