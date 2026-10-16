@@ -77,6 +77,17 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const viewWidth = canvas.clientWidth;
       const viewHeight = canvas.clientHeight;
       ctx.clearRect(0, 0, viewWidth, viewHeight);
+      const ambient = ctx.createLinearGradient(0, 0, viewWidth, viewHeight);
+      ambient.addColorStop(0, '#1b2923');
+      ambient.addColorStop(0.55, '#121d18');
+      ambient.addColorStop(1, '#0c1411');
+      ctx.fillStyle = ambient;
+      ctx.fillRect(0, 0, viewWidth, viewHeight);
+      const windowGlow = ctx.createRadialGradient(viewWidth * 0.68, viewHeight * 0.12, 4, viewWidth * 0.68, viewHeight * 0.12, Math.max(viewWidth, viewHeight) * 0.7);
+      windowGlow.addColorStop(0, 'rgba(174, 210, 181, 0.09)');
+      windowGlow.addColorStop(1, 'rgba(174, 210, 181, 0)');
+      ctx.fillStyle = windowGlow;
+      ctx.fillRect(0, 0, viewWidth, viewHeight);
 
       ctx.save();
       ctx.translate(currentCamera.offsetX, currentCamera.offsetY);
@@ -123,7 +134,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       sortedEmployees.forEach((emp) => {
         const { screenX, screenY } = gridToIsometricScreen(emp.x, emp.y, tileW, tileH, 0, 0);
         const isSelected = currentState.selectedWorkerId === emp.id;
-        drawCharacterModel(ctx, screenX, screenY, emp, animTime, isSelected);
+        drawCharacterModel(ctx, screenX, screenY + (emp.state === 'TYPING' ? -2 : 0), emp, animTime, isSelected);
       });
 
       // 5. Draw overhead activity bubbles

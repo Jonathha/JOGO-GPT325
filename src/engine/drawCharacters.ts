@@ -7,6 +7,7 @@ function makeGradient(ctx: CanvasRenderingContext2D, x: number, y: number, heigh
 }
 export function drawCharacterBody(ctx: CanvasRenderingContext2D, x: number, y: number, emp: Employee, animTime: number): void {
   const walking = emp.state === 'WALKING';
+  const seated = emp.state === 'TYPING';
   const bob = walking ? Math.sin(animTime * 12) * 2 : 0;
   const swing = walking ? Math.sin(animTime * 12) * 3 : 0;
   ctx.save();
@@ -15,9 +16,19 @@ export function drawCharacterBody(ctx: CanvasRenderingContext2D, x: number, y: n
   const legGradient = ctx.createLinearGradient(x - 4, y + 6, x + 3, y + 16);
   legGradient.addColorStop(0, '#46524a'); legGradient.addColorStop(1, '#18211c');
   ctx.strokeStyle = legGradient; ctx.lineWidth = 3.5;
-  ctx.beginPath(); ctx.moveTo(x - 2, y + 3 + bob); ctx.lineTo(x - 3 - swing, y + 11 + bob);
-  ctx.moveTo(x + 2, y + 3 + bob); ctx.lineTo(x + 3 + swing, y + 11 + bob); ctx.stroke();
-  ctx.fillStyle = '#101713'; ctx.beginPath(); ctx.ellipse(x - 3 - swing, y + 12 + bob, 3, 1.5, -.12, 0, Math.PI * 2); ctx.ellipse(x + 3 + swing, y + 12 + bob, 3, 1.5, -.12, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath();
+  if (seated) {
+    ctx.moveTo(x - 2, y + 2); ctx.lineTo(x - 2, y + 7); ctx.lineTo(x - 6, y + 9);
+    ctx.moveTo(x + 2, y + 2); ctx.lineTo(x + 2, y + 7); ctx.lineTo(x + 6, y + 9);
+  } else {
+    ctx.moveTo(x - 2, y + 3 + bob); ctx.lineTo(x - 3 - swing, y + 11 + bob);
+    ctx.moveTo(x + 2, y + 3 + bob); ctx.lineTo(x + 3 + swing, y + 11 + bob);
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#101713'; ctx.beginPath();
+  if (seated) { ctx.ellipse(x - 7, y + 10, 3, 1.5, -.12, 0, Math.PI * 2); ctx.ellipse(x + 7, y + 10, 3, 1.5, -.12, 0, Math.PI * 2); }
+  else { ctx.ellipse(x - 3 - swing, y + 12 + bob, 3, 1.5, -.12, 0, Math.PI * 2); ctx.ellipse(x + 3 + swing, y + 12 + bob, 3, 1.5, -.12, 0, Math.PI * 2); }
+  ctx.fill();
   const coat = emp.avatarColor || '#739a83';
   ctx.fillStyle = makeGradient(ctx, x, y + bob, 14, '#d0e0d2', coat);
   ctx.beginPath(); ctx.moveTo(x - 5, y - 6 + bob); ctx.quadraticCurveTo(x, y - 10 + bob, x + 5, y - 6 + bob); ctx.lineTo(x + 6, y + 4 + bob); ctx.quadraticCurveTo(x, y + 7 + bob, x - 6, y + 4 + bob); ctx.closePath(); ctx.fill();

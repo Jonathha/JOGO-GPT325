@@ -4,7 +4,7 @@ import { Employee, EmployeeState } from '../types/gameTypes';
  * Transitions an employee to a new randomized office activity
  * (visiting coffee machine, inspecting server rack, sketching at whiteboard, or returning to desk).
  */
-export function resolveWorkerNextState(emp: Employee, gridSize: number): Employee {
+export function resolveWorkerNextState(emp: Employee, gridSize: number, deskPositions: Array<{ x: number; y: number }> = []): Employee {
   const roll = Math.random();
   let nextState: EmployeeState = 'TYPING';
   let targetX = emp.x;
@@ -13,8 +13,9 @@ export function resolveWorkerNextState(emp: Employee, gridSize: number): Employe
   if (roll < 0.45) {
     // Return to assigned workstation
     nextState = 'TYPING';
-    targetX = Math.max(1, Math.min(gridSize - 2, 1 + (emp.deskIndex % 3) * 2));
-    targetY = Math.max(1, Math.min(gridSize - 2, 1 + Math.floor(emp.deskIndex / 3) * 2));
+    const assignedDesk = deskPositions.length ? deskPositions[emp.deskIndex % deskPositions.length] : null;
+    targetX = assignedDesk?.x ?? Math.max(1, Math.min(gridSize - 2, 1 + (emp.deskIndex % 3) * 2));
+    targetY = assignedDesk?.y ?? Math.max(1, Math.min(gridSize - 2, 1 + Math.floor(emp.deskIndex / 3) * 2));
   } else if (roll < 0.65) {
     // Grab coffee break at the coffee bar
     nextState = 'COFFEE';
@@ -38,6 +39,7 @@ export function resolveWorkerNextState(emp: Employee, gridSize: number): Employe
   return {
     ...emp,
     state: nextState,
+    activityState: nextState,
     targetX,
     targetY,
     stateTimer: newTimer,
@@ -51,7 +53,8 @@ export function resolveWorkerNextState(emp: Employee, gridSize: number): Employe
 export function updateEmployeeBehaviors(
   employees: Employee[],
   gridSize: number,
-  deltaSeconds: number
+  deltaSeconds: number,
+  deskPositions: Array<{ x: number; y: number }> = []
 ): Employee[] {
   const walkSpeed = 1.4; // grid units per second
 
@@ -74,18 +77,22 @@ export function updateEmployeeBehaviors(
         x: currentX,
         y: currentY,
         state: 'WALKING',
+        activityState: emp.activityState ?? (emp.state === 'WALKING' ? 'TYPING' : emp.state),
       };
     }
 
     // If reached destination and timer elapsed, transition to next activity
     if (timer <= 0) {
-      return resolveWorkerNextState({ ...emp, x: emp.targetX, y: emp.targetY }, gridSize);
+      return resolveWorkerNextState({ ...emp, x: emp.targetX, y: emp.targetY }, gridSize, deskPositions);
     }
 
+    const activityState = emp.activityState ?? (emp.state === 'WALKING' ? 'TYPING' : emp.state);
     return {
       ...emp,
       x: emp.targetX,
       y: emp.targetY,
+      state: activityState,
+      activityState,
       stateTimer: timer,
     };
   });

@@ -22,6 +22,7 @@ export interface Employee {
   avatarSeed: number;
   avatarColor: string;
   state: EmployeeState;
+  activityState?: EmployeeState;
   x: number; // isometric cell coordinate
   y: number;
   targetX: number;
@@ -54,6 +55,7 @@ export interface ModelProject {
   currentLoss: number;
   initialLoss: number;
   isCompleted: boolean;
+  isTrainingPaused?: boolean;
   mmluScore: number; // current evaluated estimate
   codingScore: number;
   mathScore: number;

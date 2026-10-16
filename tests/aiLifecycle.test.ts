@@ -4,6 +4,8 @@ import { createDefaultCompanyState } from '../src/data/initialCompanyState';
 import { getRivalModelsForDay } from '../src/data/rivalModels';
 import { processEndOfDayFinances } from '../src/engine/simulationDailyPayout';
 import { updateModelTrainingStep } from '../src/engine/simulationTick';
+import { removeModelProject, toggleModelTraining } from '../src/engine/modelLifecycle';
+import { updateEmployeeBehaviors } from '../src/engine/simulationWorkers';
 
 describe('AI model lifecycle and market simulation', () => {
   it('introduces competitor releases over time and evolves their prices', () => {
@@ -38,13 +40,52 @@ describe('AI model lifecycle and market simulation', () => {
     const model = buildNewModelProject('Titan test', '14B', 'REASONING_RL', 1);
     const state = createDefaultCompanyState();
     state.hasStarted = true;
-    state.hardware.totalTeraflops = 100000;
+    state.hardware.totalTeraflops = 10000;
     state.models = [model];
     const next = updateModelTrainingStep(state, 1).models[0];
     expect(next.trainingProgress).toBeGreaterThan(0);
     expect(next.trainingProgress).toBeLessThan(100);
     expect(next.mmluScore).toBeGreaterThan(model.mmluScore);
     expect(next.mmluScore).toBeLessThanOrEqual(next.targetMmluScore);
+  });
+
+  it('restores seated typing after a worker reaches their assigned desk', () => {
+    const employee = {
+      id: 'worker-1', name: 'Engineer', role: 'ML_ENGINEER' as const, roleName: 'ML Engineer',
+      skill: 80, morale: 75, salaryPerDay: 100, avatarSeed: 1, avatarColor: '#789',
+      state: 'WALKING' as const, activityState: 'TYPING' as const,
+      x: 1, y: 1, targetX: 1, targetY: 1, deskIndex: 0, assignedProjectId: null, stateTimer: 8,
+    };
+    const [updated] = updateEmployeeBehaviors([employee], 6, 0.1, [{ x: 1, y: 1 }]);
+    expect(updated.state).toBe('TYPING');
+  });
+
+  it('finishes small models faster than large foundation models', () => {
+    const small = buildNewModelProject('Titan small', '7B', 'TRANSFORMER_DENSE', 1);
+    const large = buildNewModelProject('Titan large', '405B', 'TRANSFORMER_DENSE', 1);
+    expect(small.computeNeededFlops).toBeLessThan(large.computeNeededFlops);
+    expect(small.computeNeededFlops).toBe(2.5e16);
+  });
+
+  it('pauses training without losing progress and resumes it', () => {
+    const model = buildNewModelProject('Titan pause', '14B', 'REASONING_RL', 1);
+    const state = createDefaultCompanyState();
+    state.hasStarted = true;
+    state.models = [model];
+    const paused = toggleModelTraining([model], model.id)[0];
+    expect(paused.isTrainingPaused).toBe(true);
+    const pausedState = updateModelTrainingStep({ ...state, models: [paused] }, 2);
+    expect(pausedState.models[0].computeInvestedFlops).toBe(0);
+    const resumed = toggleModelTraining([paused], model.id)[0];
+    expect(resumed.isTrainingPaused).toBe(false);
+    const resumedState = updateModelTrainingStep({ ...state, models: [resumed] }, 1);
+    expect(resumedState.models[0].computeInvestedFlops).toBeGreaterThan(0);
+  });
+
+  it('deletes only the selected model and does not alter the others', () => {
+    const first = buildNewModelProject('Titan A', '7B', 'TRANSFORMER_DENSE', 1);
+    const second = buildNewModelProject('Titan B', '14B', 'TRANSFORMER_DENSE', 1);
+    expect(removeModelProject([first, second], first.id)).toEqual([second]);
   });
 
   it('accounts for paid revenue and inference cost from token volume', () => {

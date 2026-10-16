@@ -4,8 +4,20 @@ export function drawDeskStation(ctx: CanvasRenderingContext2D, sx: number, sy: n
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(sx, sy + 4, 24, 7, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#29342e'; ctx.beginPath(); ctx.ellipse(sx, sy + 4, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+  // Ergonomic swivel chair, layered behind the desktop.
+  ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(sx, sy + 15, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
+  drawIsoBox(ctx, sx, sy + 10, 13, 11, 2.5, '#52645a', '#2b3931', '#1c2922');
+  drawIsoBox(ctx, sx, sy + 5, 12, 3, 8, '#65776c', '#34443a', '#243129');
+  drawIsoBox(ctx, sx - 6, sy + 8, 2, 5, 5, '#53655a', '#2b3931', '#1c2922');
+  drawIsoBox(ctx, sx + 6, sy + 8, 2, 5, 5, '#53655a', '#2b3931', '#1c2922');
+  drawIsoBox(ctx, sx, sy + 16, 2, 2, 4, '#9ca99f', '#4b5a50', '#303d35');
+  [-7, 0, 7].forEach((offset) => {
+    ctx.strokeStyle = '#66766b'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(sx, sy + 18); ctx.lineTo(sx + offset, sy + 20); ctx.stroke();
+    ctx.fillStyle = '#18231d'; ctx.beginPath(); ctx.arc(sx + offset, sy + 20, 1.8, 0, Math.PI * 2); ctx.fill();
+  });
   drawIsoBox(ctx, sx, sy + 4, 4, 4, 7, '#56645a', '#27322b', '#1c2620');
-  drawIsoBox(ctx, sx, sy - 2, 35, 20, 4, '#b18a5d', '#70553b', '#4c3a2a');
+  drawIsoBox(ctx, sx, sy - 2, 35, 20, 4, '#c1a078', '#806344', '#4c3a2a');
+  ctx.strokeStyle = 'rgba(255,235,205,.28)'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(sx - 15, sy - 5); ctx.lineTo(sx + 15, sy - 5); ctx.stroke();
   drawIsoBox(ctx, sx - 11, sy + 4, 3, 3, 7, '#7c654b', '#473a2d', '#342b22');
   drawIsoBox(ctx, sx + 11, sy + 4, 3, 3, 7, '#7c654b', '#473a2d', '#342b22');
   drawIsoBox(ctx, sx - 7, sy - 10, 2, 2, 7, '#59675f', '#2a342e', '#202923');
