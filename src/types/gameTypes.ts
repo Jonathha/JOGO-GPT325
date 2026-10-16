@@ -45,17 +45,24 @@ export interface ModelProject {
   architectureName: string;
   trainingStrategy: TrainingStrategy;
   trainingStage: TrainingStage;
+  version: number;
   baseModelId: string | null;
+  baseModelName: string | null;
   computeNeededFlops: number;
   computeInvestedFlops: number;
   trainingProgress: number; // 0 to 100%
   currentLoss: number;
+  initialLoss: number;
   isCompleted: boolean;
-  mmluScore: number; // benchmark
+  mmluScore: number; // current evaluated estimate
   codingScore: number;
   mathScore: number;
+  targetMmluScore: number;
+  targetCodingScore: number;
+  targetMathScore: number;
   dailyApiRevenue: number;
   activeUsers: number;
+  dailyNewUsers: number;
   isReleased: boolean;
   pricingMode: 'UNRELEASED' | 'FREE' | 'PAID';
   pricePerMillionInput: number;

@@ -1,4 +1,4 @@
-import { CompanyState } from '../types/gameTypes';
+import { CompanyState, TrainingStage } from '../types/gameTypes';
 import { processEndOfDayFinances } from './simulationDailyPayout';
 
 /**
@@ -73,21 +73,24 @@ export function updateModelTrainingStep(
 
     const newInvestedFlops = model.computeInvestedFlops + computeSharePerModel;
     const progressRatio = Math.min(1.0, newInvestedFlops / model.computeNeededFlops);
-    const progressPercent = Math.round(progressRatio * 100);
+    const progressPercent = Number.isFinite(progressRatio) ? (progressRatio >= 1 ? 100 : Math.floor(progressRatio * 100)) : 0;
     const isNowFinished = progressRatio >= 1.0;
-    const trainingStage = progressRatio < 0.05 ? 'DATA_PREPARATION'
+    const trainingStage: TrainingStage = progressRatio < 0.05 ? 'DATA_PREPARATION'
       : progressRatio < 0.85 ? 'PRETRAINING'
       : progressRatio < 0.93 ? 'POST_TRAINING'
       : progressRatio < 1 ? 'EVALUATION' : 'READY';
 
     // Power-law loss curve decay
-    const newLoss = Math.max(0.72, 4.2 * Math.exp(-progressRatio * 2.8));
+    const newLoss = Math.max(0.72, model.initialLoss * Math.exp(-progressRatio * 2.8));
 
     return {
       ...model,
       computeInvestedFlops: newInvestedFlops,
       trainingProgress: progressPercent,
       trainingStage,
+      mmluScore: Math.round(Math.max(1, model.targetMmluScore - 8) + (model.targetMmluScore - Math.max(1, model.targetMmluScore - 8)) * progressRatio),
+      codingScore: Math.round(Math.max(1, model.targetCodingScore - 8) + (model.targetCodingScore - Math.max(1, model.targetCodingScore - 8)) * progressRatio),
+      mathScore: Math.round(Math.max(1, model.targetMathScore - 8) + (model.targetMathScore - Math.max(1, model.targetMathScore - 8)) * progressRatio),
       currentLoss: parseFloat(newLoss.toFixed(3)),
       isCompleted: isNowFinished,
     };
