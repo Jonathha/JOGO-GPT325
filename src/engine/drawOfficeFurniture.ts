@@ -1,3 +1,21 @@
+type OfficeSprite = 'desk' | 'server' | 'coffee' | 'whiteboard' | 'sofa' | 'plant';
+let officeSpriteImage: HTMLImageElement | null = null;
+let officeSpriteReady = false;
+
+/** Load the custom illustrated sprite atlas once; procedural drawings remain as fallback. */
+function drawOfficeSprite(ctx: CanvasRenderingContext2D, sprite: OfficeSprite, sx: number, sy: number, width: number, height: number): boolean {
+  if (typeof Image === 'undefined') return false;
+  if (!officeSpriteImage) {
+    officeSpriteImage = new Image();
+    officeSpriteImage.onload = () => { officeSpriteReady = true; };
+    officeSpriteImage.src = '/assets/office/office-sprites.svg';
+  }
+  if (!officeSpriteReady || !officeSpriteImage) return false;
+  const index: Record<OfficeSprite, number> = { desk: 0, server: 1, coffee: 2, whiteboard: 3, sofa: 4, plant: 5 };
+  ctx.drawImage(officeSpriteImage, index[sprite] * 128, 0, 128, 128, sx - width / 2, sy - height + 8, width, height);
+  return true;
+}
+
 /**
  * Draws an isometric developer workstation with dual glowing monitors,
  * ergonomic desk surface, cable grommets, and animated terminal displays.
@@ -10,6 +28,13 @@ export function drawDeskStation(
   hasWorker: boolean
 ): void {
   ctx.save();
+  if (drawOfficeSprite(ctx, 'desk', sx, sy, 92, 86)) {
+    if (hasWorker) {
+      ctx.fillStyle = `rgba(76, 226, 213, ${0.08 + (Math.sin(animTime * 3) + 1) * 0.06})`;
+      ctx.beginPath(); ctx.ellipse(sx + 4, sy - 31, 24, 12, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore(); return;
+  }
   // Wooden / composite desk top surface
   ctx.beginPath();
   ctx.moveTo(sx - 24, sy - 12);
@@ -61,6 +86,12 @@ export function drawServerRack(
   loadRatio: number
 ): void {
   ctx.save();
+  if (drawOfficeSprite(ctx, 'server', sx, sy, 76, 88)) {
+    const glow = 0.35 + (Math.sin(animTime * 5) + 1) * 0.2 * Math.max(0.25, loadRatio);
+    ctx.fillStyle = `rgba(71, 244, 205, ${glow})`;
+    ctx.beginPath(); ctx.arc(sx - 5, sy - 43, 2.1, 0, Math.PI * 2); ctx.fill();
+    ctx.restore(); return;
+  }
   const rackW = 20;
   const rackH = 46;
 
@@ -106,6 +137,12 @@ export function drawCoffeeStation(
   animTime: number
 ): void {
   ctx.save();
+  if (drawOfficeSprite(ctx, 'coffee', sx, sy, 82, 80)) {
+    const steam = (animTime * 18) % 12;
+    ctx.strokeStyle = 'rgba(242, 249, 242, .7)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(sx + 13, sy - 53 - steam); ctx.quadraticCurveTo(sx + 17, sy - 61 - steam, sx + 13, sy - 66 - steam); ctx.stroke();
+    ctx.restore(); return;
+  }
   // Wooden barista prep table
   ctx.beginPath();
   ctx.moveTo(sx - 16, sy - 8);
@@ -150,6 +187,7 @@ export function drawWhiteboard(
   animTime: number
 ): void {
   ctx.save();
+  if (drawOfficeSprite(ctx, 'whiteboard', sx, sy, 78, 88)) { ctx.restore(); return; }
   const boardW = 28;
   const boardH = 22;
 
@@ -202,6 +240,14 @@ export function drawLoungeAndDecor(
   animTime: number
 ): void {
   ctx.save();
+  if (drawOfficeSprite(ctx, type === 'SOFA' ? 'sofa' : 'plant', sx, sy, type === 'SOFA' ? 86 : 70, type === 'SOFA' ? 78 : 82)) {
+    if (type === 'PLANT') {
+      const sway = Math.sin(animTime * 1.5) * 1.5;
+      ctx.strokeStyle = 'rgba(182, 216, 177, .45)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(sx, sy - 50); ctx.lineTo(sx + sway, sy - 61); ctx.stroke();
+    }
+    ctx.restore(); return;
+  }
   if (type === 'SOFA') {
     // Designer Scandinavian 2-seater lounge sofa
     ctx.fillStyle = '#1e3a8a';
