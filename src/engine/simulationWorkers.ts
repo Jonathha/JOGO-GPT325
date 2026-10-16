@@ -39,6 +39,7 @@ export function resolveWorkerNextState(emp: Employee, gridSize: number, deskPosi
   return {
     ...emp,
     state: nextState,
+    activityState: nextState,
     targetX,
     targetY,
     stateTimer: newTimer,
@@ -76,6 +77,7 @@ export function updateEmployeeBehaviors(
         x: currentX,
         y: currentY,
         state: 'WALKING',
+        activityState: emp.activityState ?? (emp.state === 'WALKING' ? 'TYPING' : emp.state),
       };
     }
 
@@ -84,10 +86,13 @@ export function updateEmployeeBehaviors(
       return resolveWorkerNextState({ ...emp, x: emp.targetX, y: emp.targetY }, gridSize, deskPositions);
     }
 
+    const activityState = emp.activityState ?? (emp.state === 'WALKING' ? 'TYPING' : emp.state);
     return {
       ...emp,
       x: emp.targetX,
       y: emp.targetY,
+      state: activityState,
+      activityState,
       stateTimer: timer,
     };
   });
