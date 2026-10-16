@@ -52,6 +52,7 @@ export interface ModelProject {
   computeInvestedFlops: number;
   trainingProgress: number; // 0 to 100%
   currentLoss: number;
+  initialLoss: number;
   isCompleted: boolean;
   mmluScore: number; // current evaluated estimate
   codingScore: number;
@@ -61,6 +62,7 @@ export interface ModelProject {
   targetMathScore: number;
   dailyApiRevenue: number;
   activeUsers: number;
+  dailyNewUsers: number;
   isReleased: boolean;
   pricingMode: 'UNRELEASED' | 'FREE' | 'PAID';
   pricePerMillionInput: number;
