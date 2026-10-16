@@ -33,6 +33,8 @@ export interface Employee {
 
 export type ArchitectureType = 'TRANSFORMER_DENSE' | 'MOE_SPARSE' | 'REASONING_RL' | 'DIFFUSION_VISION';
 
+export type TrainingStrategy = 'FROM_SCRATCH' | 'FINE_TUNE' | 'CONTINUED' | 'DISTILLATION';
+
 export interface ModelProject {
   id: string;
   name: string;
@@ -40,6 +42,8 @@ export interface ModelProject {
   paramsBillion: number;
   architecture: ArchitectureType;
   architectureName: string;
+  trainingStrategy: TrainingStrategy;
+  baseModelId: string | null;
   computeNeededFlops: number;
   computeInvestedFlops: number;
   trainingProgress: number; // 0 to 100%
