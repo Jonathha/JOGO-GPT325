@@ -55,9 +55,10 @@ export function updateModelTrainingStep(
     return state;
   }
 
+  if (!Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return state;
   const effectiveDelta = deltaSeconds * state.gameSpeed;
-  const totalComputeFlops = state.hardware.totalTeraflops;
-  const activeModels = state.models.filter((m) => !m.isCompleted);
+  const totalComputeFlops = Number.isFinite(state.hardware.totalTeraflops) ? Math.max(0, state.hardware.totalTeraflops) : 0;
+  const activeModels = state.models.filter((m) => !m.isCompleted && !m.isTrainingPaused);
 
   if (activeModels.length === 0) {
     return state;
@@ -67,12 +68,13 @@ export function updateModelTrainingStep(
   const computeSharePerModel = (totalComputeFlops * effectiveDelta * 1e12) / activeModels.length;
 
   const updatedModels = state.models.map((model) => {
-    if (model.isCompleted) {
+    if (model.isCompleted || model.isTrainingPaused) {
       return model;
     }
 
+    const neededFlops = Number.isFinite(model.computeNeededFlops) && model.computeNeededFlops > 0 ? model.computeNeededFlops : Number.MAX_VALUE;
     const newInvestedFlops = model.computeInvestedFlops + computeSharePerModel;
-    const progressRatio = Math.min(1.0, newInvestedFlops / model.computeNeededFlops);
+    const progressRatio = Math.max(0, Math.min(1.0, newInvestedFlops / neededFlops));
     const progressPercent = Number.isFinite(progressRatio) ? (progressRatio >= 1 ? 100 : Math.floor(progressRatio * 100)) : 0;
     const isNowFinished = progressRatio >= 1.0;
     const trainingStage: TrainingStage = progressRatio < 0.05 ? 'DATA_PREPARATION'
