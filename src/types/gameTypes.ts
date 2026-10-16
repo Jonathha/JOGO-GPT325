@@ -34,6 +34,7 @@ export interface Employee {
 export type ArchitectureType = 'TRANSFORMER_DENSE' | 'MOE_SPARSE' | 'REASONING_RL' | 'DIFFUSION_VISION';
 
 export type TrainingStrategy = 'FROM_SCRATCH' | 'FINE_TUNE' | 'CONTINUED' | 'DISTILLATION';
+export type TrainingStage = 'DATA_PREPARATION' | 'PRETRAINING' | 'POST_TRAINING' | 'EVALUATION' | 'READY';
 
 export interface ModelProject {
   id: string;
@@ -43,6 +44,7 @@ export interface ModelProject {
   architecture: ArchitectureType;
   architectureName: string;
   trainingStrategy: TrainingStrategy;
+  trainingStage: TrainingStage;
   baseModelId: string | null;
   computeNeededFlops: number;
   computeInvestedFlops: number;
