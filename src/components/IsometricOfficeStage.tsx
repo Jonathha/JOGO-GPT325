@@ -7,6 +7,32 @@ import { drawBookshelf, drawCoffeeStation, drawDeskStation, drawFloorLamp, drawL
 import { drawCharacterModel } from '../engine/drawCharacters';
 import { drawOverheadStatusBubble } from '../engine/drawCharacterBubbles';
 
+interface StaticLayer { phase: CompanyState['phase']; canvas: HTMLCanvasElement; minX: number; minY: number; w: number; h: number }
+
+/** Renders the never-changing part of the office (floor, rugs, back walls) once, so each frame is a single drawImage. */
+function bakeStaticLayer(tiles: OfficeTile[], phase: CompanyState['phase'], size: number): StaticLayer | null {
+  const S = 2;
+  const minX = -size * 32 - 6; const minY = -110;
+  const w = size * 64 + 12; const h = size * 32 + 134;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(w * S); canvas.height = Math.ceil(h * S);
+  const c = canvas.getContext('2d');
+  if (!c) return null;
+  c.scale(S, S); c.translate(-minX, -minY);
+  tiles.forEach((tile) => {
+    if (tile.type === 'WALL_LEFT' || tile.type === 'WALL_RIGHT') return;
+    const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, 64, 32, 0, 0);
+    drawFloorTile(c, screenX, screenY, 64, 32, phase, tile.x, tile.y, 0);
+  });
+  tiles.forEach((tile) => {
+    if (tile.type !== 'RUG') return;
+    const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, 64, 32, 0, 0);
+    drawRug(c, screenX, screenY, 64, 32, phase, tile.x, tile.y);
+  });
+  drawBackWalls(c, size, 64, 32, phase, 0);
+  return { phase, canvas, minX, minY, w, h };
+}
+
 interface StageProps {
   state: CompanyState;
   onSelectWorker: (id: string | null) => void;
@@ -26,6 +52,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
   const latestProps = useRef(props);
   const cameraRef = useRef(camera);
   const layoutRef = useRef<{ phase: CompanyState['phase']; tiles: OfficeTile[] } | null>(null);
+  const layerRef = useRef<StaticLayer | null>(null);
   latestProps.current = props;
   cameraRef.current = camera;
   const [isDragging, setIsDragging] = useState(false);
@@ -65,7 +92,11 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
 
     let startTime = performance.now();
 
+    let lastFrame = 0;
     const render = (now: number) => {
+      // Behind the setup modal nothing needs 60 fps, so idle at ~20 fps until the game starts.
+      if (!latestProps.current.state.hasStarted && now - lastFrame < 50) { animId = requestAnimationFrame(render); return; }
+      lastFrame = now;
       const animTime = (now - startTime) * 0.001;
       const currentState = latestProps.current.state;
       const currentCamera = cameraRef.current;
@@ -77,18 +108,6 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const viewWidth = canvas.clientWidth;
       const viewHeight = canvas.clientHeight;
       ctx.clearRect(0, 0, viewWidth, viewHeight);
-      const ambient = ctx.createLinearGradient(0, 0, viewWidth, viewHeight);
-      ambient.addColorStop(0, '#1b2923');
-      ambient.addColorStop(0.55, '#121d18');
-      ambient.addColorStop(1, '#0c1411');
-      ctx.fillStyle = ambient;
-      ctx.fillRect(0, 0, viewWidth, viewHeight);
-      const windowGlow = ctx.createRadialGradient(viewWidth * 0.68, viewHeight * 0.12, 4, viewWidth * 0.68, viewHeight * 0.12, Math.max(viewWidth, viewHeight) * 0.7);
-      windowGlow.addColorStop(0, 'rgba(174, 210, 181, 0.09)');
-      windowGlow.addColorStop(1, 'rgba(174, 210, 181, 0)');
-      ctx.fillStyle = windowGlow;
-      ctx.fillRect(0, 0, viewWidth, viewHeight);
-
       ctx.save();
       ctx.translate(currentCamera.offsetX, currentCamera.offsetY);
       ctx.scale(currentCamera.zoom, currentCamera.zoom);
@@ -96,20 +115,15 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const tileW = 64;
       const tileH = 32;
 
-      // 1. Floor tiles (material changes per company phase), then rugs on top of the floor
-      currentTiles.forEach((tile) => {
-        if (tile.type === 'WALL_LEFT' || tile.type === 'WALL_RIGHT') return;
-        const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, tileW, tileH, 0, 0);
-        drawFloorTile(ctx, screenX, screenY, tileW, tileH, currentState.phase, tile.x, tile.y, animTime);
-      });
-      currentTiles.forEach((tile) => {
-        if (tile.type !== 'RUG') return;
-        const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, tileW, tileH, 0, 0);
-        drawRug(ctx, screenX, screenY, tileW, tileH, currentState.phase, tile.x, tile.y);
-      });
-
-      // 2. Back walls with windows, wall art and light shafts
-      drawBackWalls(ctx, currentGridSize, tileW, tileH, currentState.phase, animTime);
+      // 1-2. Floor, rugs and back walls come from a cached layer (rebuilt only when the office phase changes)
+      if (!layerRef.current || layerRef.current.phase !== currentState.phase) {
+        layerRef.current = bakeStaticLayer(currentTiles, currentState.phase, currentGridSize);
+      }
+      const layer = layerRef.current;
+      if (layer) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(layer.canvas, layer.minX, layer.minY, layer.w, layer.h);
+      }
 
       // 3. Furniture and employees share one depth-sorted pass so nobody is drawn in front of things they stand behind
       const renderables: Array<{ depth: number; draw: () => void }> = [];
@@ -236,7 +250,10 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
   };
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#141c1a]">
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{ background: 'radial-gradient(circle at 68% 12%, rgba(174,210,181,.09), rgba(174,210,181,0) 70%), linear-gradient(135deg, #1b2923 0%, #121d18 55%, #0c1411 100%)' }}
+    >
       <canvas
         ref={canvasRef}
         onPointerDown={handlePointerDown}
@@ -249,6 +266,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
         style={{ touchAction: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
         className="absolute inset-0 block h-full w-full crisp-canvas"
       />
+      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.45) 100%)' }} />
       <div className="pointer-events-none absolute bottom-4 left-4 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#101815]/85 px-3 py-2 text-[11px] text-[#d0ddd4] shadow-xl backdrop-blur-md sm:flex">
         <span className="h-1.5 w-1.5 rounded-full bg-[#a8d4b1]" />
         Arraste para mover <span className="text-white/30">·</span> Scroll para aproximar

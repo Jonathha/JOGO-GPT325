@@ -165,7 +165,7 @@ export function drawBackWalls(
   ctx.restore();
 }
 
-/** Soft vignette plus drifting dust motes, drawn in screen space after the world. */
+/** Drifting dust motes in screen space (the vignette is a cheap CSS overlay in the stage component). */
 export function drawAtmosphere(ctx: CanvasRenderingContext2D, width: number, height: number, animTime: number, phase: GamePhase): void {
   const pal = palette(phase);
   ctx.save();
@@ -175,8 +175,5 @@ export function drawAtmosphere(ctx: CanvasRenderingContext2D, width: number, hei
     ctx.fillStyle = `rgba(${pal.light},${0.10 + 0.08 * Math.sin(animTime + i)})`;
     ctx.beginPath(); ctx.arc(x, y, 1 + hash(i, 4, 4) * 1.2, 0, Math.PI * 2); ctx.fill();
   }
-  const vignette = ctx.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.35, width / 2, height / 2, Math.max(width, height) * 0.75);
-  vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,.45)');
-  ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
   ctx.restore();
 }
