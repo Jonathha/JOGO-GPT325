@@ -22,6 +22,7 @@ export interface Employee {
   avatarSeed: number;
   avatarColor: string;
   state: EmployeeState;
+  activityState?: EmployeeState;
   x: number; // isometric cell coordinate
   y: number;
   targetX: number;
