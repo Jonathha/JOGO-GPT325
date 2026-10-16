@@ -48,7 +48,7 @@ export function recalculateCompanyValuation(state: CompanyState): number {
 
 /**
  * Executes the daily financial ledger settlement:
- * - Collects daily API subscription revenues from completed AI models
+ * - Calculates daily API usage revenue from released models
  * - Pays employee daily salaries
  * - Pays cloud GPU rental and electricity/cooling bills
  * - Recomputes company market valuation and checks phase milestones
@@ -77,9 +77,10 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
     const outputPrice = model.pricingMode === 'PAID' ? model.pricePerMillionOutput : 0;
     const inputCostPerMillion = 0.04 + model.paramsBillion * 0.002;
     const outputCostPerMillion = 0.08 + model.paramsBillion * 0.006;
-    const dailyApiRevenue = activeUsers * requestsPerUser *
+    const averageDailyUsers = (model.activeUsers + activeUsers) / 2;
+    const dailyApiRevenue = averageDailyUsers * requestsPerUser *
       (inputTokensPerRequest * inputPrice + outputTokensPerRequest * outputPrice) / 1_000_000;
-    const dailyInferenceCost = activeUsers * requestsPerUser *
+    const dailyInferenceCost = averageDailyUsers * requestsPerUser *
       (inputTokensPerRequest * inputCostPerMillion + outputTokensPerRequest * outputCostPerMillion) / 1_000_000;
     return { ...model, activeUsers, dailyNewUsers: acquisition, dailyApiRevenue, dailyInferenceCost };
   });
