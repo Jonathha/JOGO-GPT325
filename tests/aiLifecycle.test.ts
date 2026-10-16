@@ -5,6 +5,7 @@ import { getRivalModelsForDay } from '../src/data/rivalModels';
 import { processEndOfDayFinances } from '../src/engine/simulationDailyPayout';
 import { updateModelTrainingStep } from '../src/engine/simulationTick';
 import { removeModelProject, toggleModelTraining } from '../src/engine/modelLifecycle';
+import { updateEmployeeBehaviors } from '../src/engine/simulationWorkers';
 
 describe('AI model lifecycle and market simulation', () => {
   it('introduces competitor releases over time and evolves their prices', () => {
@@ -46,6 +47,17 @@ describe('AI model lifecycle and market simulation', () => {
     expect(next.trainingProgress).toBeLessThan(100);
     expect(next.mmluScore).toBeGreaterThan(model.mmluScore);
     expect(next.mmluScore).toBeLessThanOrEqual(next.targetMmluScore);
+  });
+
+  it('restores seated typing after a worker reaches their assigned desk', () => {
+    const employee = {
+      id: 'worker-1', name: 'Engineer', role: 'ML_ENGINEER' as const, roleName: 'ML Engineer',
+      skill: 80, morale: 75, salaryPerDay: 100, avatarSeed: 1, avatarColor: '#789',
+      state: 'WALKING' as const, activityState: 'TYPING' as const,
+      x: 1, y: 1, targetX: 1, targetY: 1, deskIndex: 0, assignedProjectId: null, stateTimer: 8,
+    };
+    const [updated] = updateEmployeeBehaviors([employee], 6, 0.1, [{ x: 1, y: 1 }]);
+    expect(updated.state).toBe('TYPING');
   });
 
   it('finishes small models faster than large foundation models', () => {
