@@ -99,3 +99,49 @@ export function drawLoungeAndDecor(ctx: CanvasRenderingContext2D, sx: number, sy
   }
   ctx.restore();
 }
+
+/** Flat rug patch drawn at floor level; neighbouring RUG tiles blend into one large carpet. */
+export function drawRug(ctx: CanvasRenderingContext2D, sx: number, sy: number, tileW: number, tileH: number, phase: string, gx: number, gy: number): void {
+  const hw = tileW * 0.5; const hh = tileH * 0.5;
+  const colors = phase === 'TORRE_SUPERCLUSTER' ? ['#0c2a4a', '#0a1f38'] : phase === 'CAMPUS_IA' ? ['#3b5b8c', '#2f4a74'] : phase === 'LOFT_STARTUP' ? ['#5b2c3a', '#4a2230'] : ['#4a5d52', '#3d4e44'];
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(sx, sy - hh); ctx.lineTo(sx + hw, sy); ctx.lineTo(sx, sy + hh); ctx.lineTo(sx - hw, sy); ctx.closePath();
+  ctx.fillStyle = colors[(gx + gy) % 2]; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(sx, sy - hh * 0.55); ctx.lineTo(sx + hw * 0.55, sy); ctx.lineTo(sx, sy + hh * 0.55); ctx.lineTo(sx - hw * 0.55, sy); ctx.closePath(); ctx.stroke();
+  ctx.restore();
+}
+
+/** Standing floor lamp with a warm animated glow pool. */
+export function drawFloorLamp(ctx: CanvasRenderingContext2D, sx: number, sy: number, animTime: number): void {
+  ctx.save();
+  const glow = ctx.createRadialGradient(sx, sy - 30, 2, sx, sy - 10, 46);
+  const flicker = 0.30 + 0.03 * Math.sin(animTime * 3);
+  glow.addColorStop(0, `rgba(255,224,160,${flicker})`); glow.addColorStop(1, 'rgba(255,224,160,0)');
+  ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = glow; ctx.fillRect(sx - 50, sy - 80, 100, 110);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(sx, sy + 3, 9, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+  drawIsoBox(ctx, sx, sy + 1, 9, 6, 2, '#4a4f55', '#2a2e33', '#1c1f23');
+  ctx.strokeStyle = '#8a9096'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(sx, sy - 1); ctx.lineTo(sx, sy - 38); ctx.stroke();
+  ctx.fillStyle = '#f5dca0'; ctx.beginPath(); ctx.moveTo(sx - 8, sy - 30); ctx.lineTo(sx + 8, sy - 30); ctx.lineTo(sx + 5, sy - 42); ctx.lineTo(sx - 5, sy - 42); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(90,70,30,.6)'; ctx.lineWidth = .8; ctx.stroke();
+  ctx.restore();
+}
+
+/** Tall bookshelf filled with deterministic coloured book spines. */
+export function drawBookshelf(ctx: CanvasRenderingContext2D, sx: number, sy: number): void {
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(sx, sy + 3, 17, 6, 0, 0, Math.PI * 2); ctx.fill();
+  drawIsoBox(ctx, sx, sy, 22, 12, 46, '#7b5a3c', '#4f3924', '#382818');
+  const books = ['#c2655a', '#6a9bc2', '#e0c068', '#7fb08a', '#9b86c4', '#d98c5f'];
+  for (let shelf = 0; shelf < 4; shelf++) {
+    const yy = sy - 8 - shelf * 10;
+    ctx.fillStyle = '#1d140c'; ctx.fillRect(sx - 9, yy - 8, 12, 8);
+    for (let b = 0; b < 5; b++) {
+      ctx.fillStyle = books[(shelf * 2 + b) % books.length];
+      const h = 5 + ((shelf + b) % 3);
+      ctx.fillRect(sx - 8 + b * 2.3, yy - h, 1.9, h);
+    }
+  }
+  ctx.restore();
+}

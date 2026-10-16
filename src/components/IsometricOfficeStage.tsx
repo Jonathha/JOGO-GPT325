@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CompanyState, OfficeTile } from '../types/gameTypes';
 import { getOfficeLayoutForPhase } from '../data/officeLayouts';
 import { gridToIsometricScreen, isometricScreenToGrid } from '../engine/isometricMath';
-import { drawFloorTile, drawPerimeterWalls } from '../engine/drawOfficeFloors';
-import { drawCoffeeStation, drawDeskStation, drawLoungeAndDecor, drawServerRack, drawWhiteboard } from '../engine/drawOfficeFurniture';
+import { drawAtmosphere, drawBackWalls, drawFloorTile } from '../engine/drawOfficeFloors';
+import { drawBookshelf, drawCoffeeStation, drawDeskStation, drawFloorLamp, drawLoungeAndDecor, drawRug, drawServerRack, drawWhiteboard } from '../engine/drawOfficeFurniture';
 import { drawCharacterModel } from '../engine/drawCharacters';
 import { drawOverheadStatusBubble } from '../engine/drawCharacterBubbles';
 
@@ -96,54 +96,61 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const tileW = 64;
       const tileH = 32;
 
-      // 1. Draw office floor tiles
+      // 1. Floor tiles (material changes per company phase), then rugs on top of the floor
       currentTiles.forEach((tile) => {
+        if (tile.type === 'WALL_LEFT' || tile.type === 'WALL_RIGHT') return;
         const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, tileW, tileH, 0, 0);
-        drawFloorTile(ctx, screenX, screenY, tileW, tileH, currentState.phase);
+        drawFloorTile(ctx, screenX, screenY, tileW, tileH, currentState.phase, tile.x, tile.y, animTime);
+      });
+      currentTiles.forEach((tile) => {
+        if (tile.type !== 'RUG') return;
+        const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, tileW, tileH, 0, 0);
+        drawRug(ctx, screenX, screenY, tileW, tileH, currentState.phase, tile.x, tile.y);
       });
 
-      // 2. Draw perimeter walls
-      const halfSize = currentGridSize - 1;
-      for (let i = 0; i <= halfSize; i++) {
-        const { screenX, screenY } = gridToIsometricScreen(i, halfSize, tileW, tileH, 0, 0);
-        drawPerimeterWalls(ctx, screenX, screenY, tileW, tileH, currentState.phase);
-      }
+      // 2. Back walls with windows, wall art and light shafts
+      drawBackWalls(ctx, currentGridSize, tileW, tileH, currentState.phase, animTime);
 
-      // 3. Draw office furniture & interactive props
+      // 3. Furniture and employees share one depth-sorted pass so nobody is drawn in front of things they stand behind
+      const renderables: Array<{ depth: number; draw: () => void }> = [];
       currentTiles.forEach((tile) => {
         const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, tileW, tileH, 0, 0);
+        const depth = tile.x + tile.y;
         if (tile.type === 'DESK') {
           const hasWorker = currentState.employees.some((e) => Math.round(e.x) === tile.x && Math.round(e.y) === tile.y);
-          drawDeskStation(ctx, screenX, screenY, animTime, hasWorker);
+          renderables.push({ depth, draw: () => drawDeskStation(ctx, screenX, screenY, animTime, hasWorker) });
         } else if (tile.type === 'SERVER') {
           const loadRatio = Math.min(1.0, currentState.hardware.totalTeraflops / 10000);
-          drawServerRack(ctx, screenX, screenY, animTime, loadRatio);
+          renderables.push({ depth, draw: () => drawServerRack(ctx, screenX, screenY, animTime, loadRatio) });
         } else if (tile.type === 'COFFEE') {
-          drawCoffeeStation(ctx, screenX, screenY, animTime);
+          renderables.push({ depth, draw: () => drawCoffeeStation(ctx, screenX, screenY, animTime) });
         } else if (tile.type === 'WHITEBOARD') {
-          drawWhiteboard(ctx, screenX, screenY, animTime);
+          renderables.push({ depth, draw: () => drawWhiteboard(ctx, screenX, screenY, animTime) });
         } else if (tile.type === 'SOFA') {
-          drawLoungeAndDecor(ctx, screenX, screenY, 'SOFA', animTime);
+          renderables.push({ depth, draw: () => drawLoungeAndDecor(ctx, screenX, screenY, 'SOFA', animTime) });
         } else if (tile.type === 'PLANT') {
-          drawLoungeAndDecor(ctx, screenX, screenY, 'PLANT', animTime);
+          renderables.push({ depth, draw: () => drawLoungeAndDecor(ctx, screenX, screenY, 'PLANT', animTime) });
+        } else if (tile.type === 'LAMP') {
+          renderables.push({ depth, draw: () => drawFloorLamp(ctx, screenX, screenY, animTime) });
+        } else if (tile.type === 'BOOKSHELF') {
+          renderables.push({ depth, draw: () => drawBookshelf(ctx, screenX, screenY) });
         }
       });
-
-      // 4. Draw Employees & Characters with proper depth sorting
-      const sortedEmployees = [...currentState.employees].sort((a, b) => (a.x + a.y) - (b.x + b.y));
-      sortedEmployees.forEach((emp) => {
+      currentState.employees.forEach((emp) => {
         const { screenX, screenY } = gridToIsometricScreen(emp.x, emp.y, tileW, tileH, 0, 0);
         const isSelected = currentState.selectedWorkerId === emp.id;
-        drawCharacterModel(ctx, screenX, screenY + (emp.state === 'TYPING' ? -2 : 0), emp, animTime, isSelected);
+        renderables.push({ depth: emp.x + emp.y + 0.01, draw: () => drawCharacterModel(ctx, screenX, screenY + (emp.state === 'TYPING' ? -2 : 0), emp, animTime, isSelected) });
       });
+      renderables.sort((a, b) => a.depth - b.depth).forEach((item) => item.draw());
 
-      // 5. Draw overhead activity bubbles
-      sortedEmployees.forEach((emp) => {
+      // 4. Overhead activity bubbles always on top
+      currentState.employees.forEach((emp) => {
         const { screenX, screenY } = gridToIsometricScreen(emp.x, emp.y, tileW, tileH, 0, 0);
         drawOverheadStatusBubble(ctx, screenX, screenY, emp, animTime);
       });
 
       ctx.restore();
+      drawAtmosphere(ctx, viewWidth, viewHeight, animTime, currentState.phase);
       animId = requestAnimationFrame(render);
     };
 

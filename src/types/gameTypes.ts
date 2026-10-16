@@ -116,7 +116,7 @@ export interface InvestorRound {
 export interface OfficeTile {
   x: number;
   y: number;
-  type: 'FLOOR' | 'WALL_LEFT' | 'WALL_RIGHT' | 'DESK' | 'SERVER' | 'COFFEE' | 'WHITEBOARD' | 'PLANT' | 'SOFA';
+  type: 'FLOOR' | 'WALL_LEFT' | 'WALL_RIGHT' | 'DESK' | 'SERVER' | 'COFFEE' | 'WHITEBOARD' | 'PLANT' | 'SOFA' | 'RUG' | 'LAMP' | 'BOOKSHELF';
   occupantId?: string;
   facing?: 'SE' | 'SW' | 'NE' | 'NW';
 }

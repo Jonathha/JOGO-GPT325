@@ -37,6 +37,14 @@ export function buildGarageLayout(): OfficeTile[] {
   tiles.push({ x: 2, y: 0, type: 'WALL_RIGHT' });
   tiles.push({ x: perimeterLimit, y: 2, type: 'FLOOR' });
 
+  // Decor: rug, bookshelf, floor lamp
+  tiles.push({ x: 2, y: 2, type: 'RUG' });
+  tiles.push({ x: 2, y: 3, type: 'RUG' });
+  tiles.push({ x: 3, y: 2, type: 'RUG' });
+  tiles.push({ x: 3, y: 3, type: 'RUG' });
+  tiles.push({ x: 0, y: 1, type: 'BOOKSHELF' });
+  tiles.push({ x: 5, y: 3, type: 'LAMP' });
+
   return tiles;
 }
 
@@ -79,6 +87,18 @@ export function buildLoftLayout(): OfficeTile[] {
   tiles.push({ x: maxCoordinate, y: 0, type: 'PLANT' });
   tiles.push({ x: 0, y: maxCoordinate, type: 'FLOOR' });
 
+  // Decor: lounge rug, bookshelves, lamp, plant
+  tiles.push({ x: 5, y: 3, type: 'RUG' });
+  tiles.push({ x: 5, y: 4, type: 'RUG' });
+  tiles.push({ x: 6, y: 3, type: 'RUG' });
+  tiles.push({ x: 6, y: 4, type: 'RUG' });
+  tiles.push({ x: 7, y: 3, type: 'RUG' });
+  tiles.push({ x: 7, y: 4, type: 'RUG' });
+  tiles.push({ x: 0, y: 2, type: 'BOOKSHELF' });
+  tiles.push({ x: 0, y: 3, type: 'BOOKSHELF' });
+  tiles.push({ x: 7, y: 6, type: 'LAMP' });
+  tiles.push({ x: 7, y: 5, type: 'PLANT' });
+
   return tiles;
 }
 
@@ -117,6 +137,24 @@ export function buildCampusLayout(): OfficeTile[] {
   tiles.push({ x: 8, y: 5, type: 'SOFA', facing: 'SW' });
   tiles.push({ x: 0, y: 0, type: 'PLANT' });
   tiles.push({ x: 9, y: 0, type: 'PLANT' });
+
+  // Decor: lounge rug, bookshelves, lamps, plants
+  tiles.push({ x: 7, y: 4, type: 'RUG' });
+  tiles.push({ x: 7, y: 5, type: 'RUG' });
+  tiles.push({ x: 7, y: 6, type: 'RUG' });
+  tiles.push({ x: 8, y: 4, type: 'RUG' });
+  tiles.push({ x: 8, y: 5, type: 'RUG' });
+  tiles.push({ x: 8, y: 6, type: 'RUG' });
+  tiles.push({ x: 9, y: 4, type: 'RUG' });
+  tiles.push({ x: 9, y: 5, type: 'RUG' });
+  tiles.push({ x: 9, y: 6, type: 'RUG' });
+  tiles.push({ x: 0, y: 2, type: 'BOOKSHELF' });
+  tiles.push({ x: 0, y: 3, type: 'BOOKSHELF' });
+  tiles.push({ x: 0, y: 4, type: 'BOOKSHELF' });
+  tiles.push({ x: 9, y: 3, type: 'LAMP' });
+  tiles.push({ x: 9, y: 8, type: 'LAMP' });
+  tiles.push({ x: 9, y: 9, type: 'PLANT' });
+  tiles.push({ x: 4, y: 9, type: 'PLANT' });
 
   return tiles;
 }
@@ -158,6 +196,25 @@ export function buildSuperclusterLayout(): OfficeTile[] {
   tiles.push({ x: 10, y: 6, type: 'SOFA', facing: 'SW' });
   tiles.push({ x: 0, y: 0, type: 'PLANT' });
   tiles.push({ x: 11, y: 0, type: 'PLANT' });
+
+  // Decor: lounge rug, bookshelves, lamps, plants
+  tiles.push({ x: 9, y: 5, type: 'RUG' });
+  tiles.push({ x: 9, y: 6, type: 'RUG' });
+  tiles.push({ x: 9, y: 7, type: 'RUG' });
+  tiles.push({ x: 10, y: 5, type: 'RUG' });
+  tiles.push({ x: 10, y: 6, type: 'RUG' });
+  tiles.push({ x: 10, y: 7, type: 'RUG' });
+  tiles.push({ x: 11, y: 5, type: 'RUG' });
+  tiles.push({ x: 11, y: 6, type: 'RUG' });
+  tiles.push({ x: 11, y: 7, type: 'RUG' });
+  tiles.push({ x: 0, y: 2, type: 'BOOKSHELF' });
+  tiles.push({ x: 0, y: 3, type: 'BOOKSHELF' });
+  tiles.push({ x: 0, y: 4, type: 'BOOKSHELF' });
+  tiles.push({ x: 0, y: 5, type: 'BOOKSHELF' });
+  tiles.push({ x: 11, y: 4, type: 'LAMP' });
+  tiles.push({ x: 11, y: 8, type: 'LAMP' });
+  tiles.push({ x: 11, y: 11, type: 'PLANT' });
+  tiles.push({ x: 6, y: 11, type: 'PLANT' });
 
   return tiles;
 }
