@@ -39,7 +39,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       canvas.width = Math.max(1, Math.round(rect.width));
       canvas.height = Math.max(1, Math.round(rect.height));
       setCamera((current) => current.offsetX === 0 && current.offsetY === 0
-        ? { offsetX: canvas.width / 2, offsetY: canvas.height / 2.15, zoom: Math.min(1.1, canvas.width / 900) }
+        ? { offsetX: canvas.width / 2, offsetY: canvas.height / 2.15, zoom: Math.max(0.65, Math.min(1.1, canvas.width / 900)) }
         : current);
     };
 
