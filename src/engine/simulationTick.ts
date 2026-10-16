@@ -88,6 +88,9 @@ export function updateModelTrainingStep(
       computeInvestedFlops: newInvestedFlops,
       trainingProgress: progressPercent,
       trainingStage,
+      mmluScore: Math.round(Math.max(1, model.targetMmluScore - 8) + (model.targetMmluScore - Math.max(1, model.targetMmluScore - 8)) * progressRatio),
+      codingScore: Math.round(Math.max(1, model.targetCodingScore - 8) + (model.targetCodingScore - Math.max(1, model.targetCodingScore - 8)) * progressRatio),
+      mathScore: Math.round(Math.max(1, model.targetMathScore - 8) + (model.targetMathScore - Math.max(1, model.targetMathScore - 8)) * progressRatio),
       currentLoss: parseFloat(newLoss.toFixed(3)),
       isCompleted: isNowFinished,
     };
