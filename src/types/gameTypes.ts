@@ -50,6 +50,11 @@ export interface ModelProject {
   mathScore: number;
   dailyApiRevenue: number;
   activeUsers: number;
+  isReleased: boolean;
+  pricingMode: 'UNRELEASED' | 'FREE' | 'PAID';
+  pricePerMillionInput: number;
+  pricePerMillionOutput: number;
+  dailyInferenceCost: number;
   hypeBoost: number;
   creationDay: number;
 }
@@ -116,5 +121,5 @@ export interface CompanyState {
   rounds: InvestorRound[];
   gridSize: number;
   selectedWorkerId: string | null;
-  activeModal: 'NONE' | 'TRAINING' | 'HIRING' | 'HARDWARE' | 'OFFICE' | 'NEWS' | 'WORKER_DETAIL';
+  activeModal: 'NONE' | 'TRAINING' | 'HIRING' | 'HARDWARE' | 'OFFICE' | 'NEWS' | 'WORKER_DETAIL' | 'DASHBOARD';
 }
