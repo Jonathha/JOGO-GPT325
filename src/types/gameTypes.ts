@@ -47,6 +47,7 @@ export interface ModelProject {
   trainingStage: TrainingStage;
   version: number;
   baseModelId: string | null;
+  baseModelName: string | null;
   computeNeededFlops: number;
   computeInvestedFlops: number;
   trainingProgress: number; // 0 to 100%
