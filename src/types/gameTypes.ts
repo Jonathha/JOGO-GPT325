@@ -54,6 +54,7 @@ export interface ModelProject {
   currentLoss: number;
   initialLoss: number;
   isCompleted: boolean;
+  isTrainingPaused?: boolean;
   mmluScore: number; // current evaluated estimate
   codingScore: number;
   mathScore: number;
