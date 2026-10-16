@@ -9,6 +9,8 @@ interface TrainingModalProps {
   onClose: () => void;
   onCreateModel: (model: ModelProject) => void;
   onLaunchModel: (id: string, mode: 'FREE' | 'PAID', inputPrice?: number, outputPrice?: number) => void;
+  onToggleTraining: (id: string) => void;
+  onDeleteModel: (id: string) => void;
 }
 
 /**
@@ -16,7 +18,7 @@ interface TrainingModalProps {
  * Shows active foundation model training runs, benchmark evaluations, and configuration form.
  */
 export function TrainingModal(props: TrainingModalProps): React.JSX.Element {
-  const { models, currentDay, onClose, onCreateModel, onLaunchModel } = props;
+  const { models, currentDay, onClose, onCreateModel, onLaunchModel, onToggleTraining, onDeleteModel } = props;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
@@ -47,7 +49,7 @@ export function TrainingModal(props: TrainingModalProps): React.JSX.Element {
                 Nenhum modelo em treinamento. Configure seu primeiro modelo acima!
               </div>
             ) : (
-              models.map((model) => <TrainingModelCard key={model.id} model={model} onLaunchModel={onLaunchModel} />)
+              models.map((model) => <TrainingModelCard key={model.id} model={model} onLaunchModel={onLaunchModel} onToggleTraining={onToggleTraining} onDeleteModel={onDeleteModel} />)
             )}
           </div>
         </div>
