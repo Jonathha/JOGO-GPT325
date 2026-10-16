@@ -76,6 +76,7 @@ export function TopBarActionButtons(props: TopBarActionsProps): React.JSX.Elemen
     { label: 'GPUs', modal: 'HARDWARE' },
     { label: 'Equipe', modal: 'HIRING' },
     { label: 'Escritório', modal: 'OFFICE' },
+    { label: 'Painéis', modal: 'DASHBOARD' },
     { label: `Notícias${unreadCount > 0 ? ` (${unreadCount})` : ''}`, modal: 'NEWS' },
   ];
 
