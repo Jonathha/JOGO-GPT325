@@ -47,6 +47,7 @@ export interface ModelProject {
   architectureName: string;
   modality: ModelModality;
   imageQuality: number;
+  targetImageQuality: number;
   imageResolution: '512px' | '1024px' | '2048px';
   trainingStrategy: TrainingStrategy;
   trainingStage: TrainingStage;
