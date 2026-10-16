@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CompanyState, ModelProject, Employee, HardwareSetup, GamePhase } from './types/gameTypes';
 import { createDefaultCompanyState } from './data/initialCompanyState';
 import { buildStarterTeam, generateRecruitCandidate } from './data/starterEmployees';
 import { updateDayProgression, updateModelTrainingStep } from './engine/simulationTick';
 import { updateEmployeeBehaviors } from './engine/simulationWorkers';
+import { getOfficeLayoutForPhase } from './data/officeLayouts';
+import { removeModelProject, toggleModelTraining } from './engine/modelLifecycle';
 import { generateDynamicHeadline, applyHeadlineImpact } from './engine/eventHeadlines';
 import { playBreakingNewsAlert, playTrainingCompleteChime } from './engine/audioSynthesizer';
 import { TopBarHUD } from './components/TopBarHUD';
@@ -25,6 +27,8 @@ export default function App(): React.JSX.Element {
   const [state, setState] = useState<CompanyState>(createDefaultCompanyState);
   const [candidates, setCandidates] = useState<Employee[]>([]);
   const [activeView, setActiveView] = useState<'office' | 'city'>('office');
+  const deskPositions = useMemo(() => getOfficeLayoutForPhase(state.phase)
+    .filter((tile) => tile.type === 'DESK').map(({ x, y }) => ({ x, y })), [state.phase]);
 
   // Initialize candidates market on startup
   useEffect(() => {
@@ -54,7 +58,7 @@ export default function App(): React.JSX.Element {
           nextState = updateModelTrainingStep(nextState, deltaSeconds);
 
           // 3. Update employee walking and behaviors
-          const updatedEmployees = updateEmployeeBehaviors(nextState.employees, nextState.gridSize, deltaSeconds);
+          const updatedEmployees = updateEmployeeBehaviors(nextState.employees, nextState.gridSize, deltaSeconds, deskPositions);
           nextState = {
             ...nextState,
             employees: updatedEmployees,
@@ -76,7 +80,7 @@ export default function App(): React.JSX.Element {
 
     animId = requestAnimationFrame(gameLoop);
     return () => cancelAnimationFrame(animId);
-  }, [state.hasStarted, state.gameSpeed]);
+  }, [state.hasStarted, state.gameSpeed, deskPositions]);
 
   // Game action handlers
   const handleStartCompany = (companyName: string, founderName: string, archetype: 'RESEARCH_LAB' | 'AUTONOMOUS_AGENTS' | 'MULTIMODAL_FRONTIER' | 'SILICON_CHIPS') => {
@@ -114,6 +118,16 @@ export default function App(): React.JSX.Element {
       models: [model, ...prev.models],
       activeModal: 'NONE',
     }));
+  };
+
+  const handleToggleModelTraining = (id: string) => {
+    setState((prev) => ({ ...prev, models: toggleModelTraining(prev.models, id) }));
+  };
+
+  const handleDeleteModel = (id: string) => {
+    const model = state.models.find((item) => item.id === id);
+    if (!model || !window.confirm('Excluir o modelo ' + model.name + '? Esta ação não pode ser desfeita.')) return;
+    setState((prev) => ({ ...prev, models: removeModelProject(prev.models, id) }));
   };
 
   const handleLaunchModel = (id: string, mode: 'FREE' | 'PAID', inputPrice = 0.5, outputPrice = 1.5) => {
@@ -202,6 +216,8 @@ export default function App(): React.JSX.Element {
           onClose={handleCloseModal}
           onCreateModel={handleCreateModel}
           onLaunchModel={handleLaunchModel}
+          onToggleTraining={handleToggleModelTraining}
+          onDeleteModel={handleDeleteModel}
         />
       )}
 
