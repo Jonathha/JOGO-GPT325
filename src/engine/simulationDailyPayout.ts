@@ -1,5 +1,5 @@
 import { CompanyState } from '../types/gameTypes';
-import { RIVAL_MODELS } from '../data/rivalModels';
+import { getRivalModelsForDay } from '../data/rivalModels';
 
 /**
  * Calculates current market valuation based on AI models, revenue multiple, and team reputation.
@@ -54,26 +54,33 @@ export function recalculateCompanyValuation(state: CompanyState): number {
  * - Recomputes company market valuation and checks phase milestones
  */
 export function processEndOfDayFinances(state: CompanyState): CompanyState {
-  const bestRivalQuality = Math.max(...RIVAL_MODELS.map((rival) => (rival.mmlu + rival.coding + rival.math) / 300));
-  const cheapestRivalOutput = Math.min(...RIVAL_MODELS.map((rival) => rival.outputPrice));
+  const rivals = getRivalModelsForDay(state.day);
+  const bestRivalQuality = Math.max(...rivals.map((rival) => (rival.mmlu + rival.coding + rival.math) / 300));
+  const averageRivalOutputPrice = rivals.reduce((sum, rival) => sum + rival.outputPrice, 0) / rivals.length;
   const models = state.models.map((model) => {
     if (!model.isCompleted || !model.isReleased) return model;
     const quality = (model.mmluScore + model.codingScore + model.mathScore) / 300;
-    const reputationFactor = 0.7 + state.reputation / 100;
+    const reputationFactor = 0.7 + Math.max(0, Math.min(100, state.reputation)) / 100;
     const competitiveFactor = quality >= bestRivalQuality ? 1.25 : quality >= bestRivalQuality - 0.05 ? 1 : 0.78;
-    const priceFactor = model.pricingMode === 'PAID' && model.pricePerMillionOutput <= cheapestRivalOutput ? 1.2 : model.pricePerMillionOutput > 2 ? 0.65 : 1;
-    const pricePenalty = model.pricingMode === 'PAID' ? Math.max(0, model.pricePerMillionOutput - 1) * 2 : 0;
+    const priceFactor = model.pricingMode === 'PAID'
+      ? Math.max(0.35, Math.min(1.25, 1.15 - (model.pricePerMillionOutput / averageRivalOutputPrice) * 0.3))
+      : 1;
     const acquisition = model.pricingMode === 'FREE'
       ? Math.round((10 + quality * 24) * reputationFactor * competitiveFactor)
-      : Math.max(0, Math.round((3 + quality * 9 - pricePenalty) * reputationFactor * competitiveFactor * priceFactor));
-    const activeUsers = model.activeUsers + acquisition;
+      : Math.max(0, Math.round((3 + quality * 9) * reputationFactor * competitiveFactor * priceFactor));
+    const churnRate = model.pricingMode === 'FREE' ? 0.012 : 0.025;
+    const activeUsers = Math.max(0, Math.round(model.activeUsers * (1 - churnRate)) + acquisition);
     const requestsPerUser = 6;
-    const revenuePerRequest = model.pricingMode === 'PAID'
-      ? (700 * model.pricePerMillionInput + 350 * model.pricePerMillionOutput) / 1_000_000
-      : 0;
-    const inferenceCostPerRequest = 0.00004 + model.paramsBillion * 0.0000001;
-    const dailyApiRevenue = activeUsers * requestsPerUser * revenuePerRequest;
-    const dailyInferenceCost = activeUsers * requestsPerUser * inferenceCostPerRequest;
+    const inputTokensPerRequest = 700;
+    const outputTokensPerRequest = 350;
+    const inputPrice = model.pricingMode === 'PAID' ? model.pricePerMillionInput : 0;
+    const outputPrice = model.pricingMode === 'PAID' ? model.pricePerMillionOutput : 0;
+    const inputCostPerMillion = 0.04 + model.paramsBillion * 0.002;
+    const outputCostPerMillion = 0.08 + model.paramsBillion * 0.006;
+    const dailyApiRevenue = activeUsers * requestsPerUser *
+      (inputTokensPerRequest * inputPrice + outputTokensPerRequest * outputPrice) / 1_000_000;
+    const dailyInferenceCost = activeUsers * requestsPerUser *
+      (inputTokensPerRequest * inputCostPerMillion + outputTokensPerRequest * outputCostPerMillion) / 1_000_000;
     return { ...model, activeUsers, dailyApiRevenue, dailyInferenceCost };
   });
   const dailyApiIncome = models.reduce((sum, model) => sum + model.dailyApiRevenue, 0);
@@ -83,8 +90,5 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
   const totalDailyExpenses = dailyPayroll + cloudGpuCost + state.hardware.dailyPowerCost + dailyInferenceCost;
   const updatedFunds = state.funds + dailyApiIncome - totalDailyExpenses;
   const partialState = { ...state, funds: updatedFunds, models };
-  return {
-    ...partialState,
-    valuation: recalculateCompanyValuation(partialState),
-  };
+  return { ...partialState, valuation: recalculateCompanyValuation(partialState) };
 }
