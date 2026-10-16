@@ -1,37 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { CompanyState, OfficeTile } from '../types/gameTypes';
-import { getOfficeLayoutForPhase } from '../data/officeLayouts';
-import { gridToIsometricScreen, isometricScreenToGrid } from '../engine/isometricMath';
-import { drawAtmosphere, drawBackWalls, drawFloorTile } from '../engine/drawOfficeFloors';
-import { drawBookshelf, drawCoffeeStation, drawDeskStation, drawFloorLamp, drawLoungeAndDecor, drawRug, drawServerRack, drawWhiteboard } from '../engine/drawOfficeFurniture';
-import { drawCharacterModel } from '../engine/drawCharacters';
-import { drawOverheadStatusBubble } from '../engine/drawCharacterBubbles';
-
-interface StaticLayer { phase: CompanyState['phase']; canvas: HTMLCanvasElement; minX: number; minY: number; w: number; h: number }
-
-/** Renders the never-changing part of the office (floor, rugs, back walls) once, so each frame is a single drawImage. */
-function bakeStaticLayer(tiles: OfficeTile[], phase: CompanyState['phase'], size: number): StaticLayer | null {
-  const S = 2;
-  const minX = -size * 32 - 6; const minY = -110;
-  const w = size * 64 + 12; const h = size * 32 + 134;
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.ceil(w * S); canvas.height = Math.ceil(h * S);
-  const c = canvas.getContext('2d');
-  if (!c) return null;
-  c.scale(S, S); c.translate(-minX, -minY);
-  tiles.forEach((tile) => {
-    if (tile.type === 'WALL_LEFT' || tile.type === 'WALL_RIGHT') return;
-    const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, 64, 32, 0, 0);
-    drawFloorTile(c, screenX, screenY, 64, 32, phase, tile.x, tile.y, 0);
-  });
-  tiles.forEach((tile) => {
-    if (tile.type !== 'RUG') return;
-    const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, 64, 32, 0, 0);
-    drawRug(c, screenX, screenY, 64, 32, phase, tile.x, tile.y);
-  });
-  drawBackWalls(c, size, 64, 32, phase, 0);
-  return { phase, canvas, minX, minY, w, h };
-}
+import React, { useEffect, useRef } from 'react';
+import { CompanyState } from '../types/gameTypes';
+import { isometricScreenToGrid } from '../engine/isometricMath';
+import { createOfficeRenderCache } from '../engine/office/officeRenderCache';
+import { renderOfficeFrame } from '../engine/office/renderOfficeFrame';
+import { OfficeHintBadge } from './office/OfficeHintBadge';
+import { OfficeZoomControls } from './office/OfficeZoomControls';
+import { useOfficeCamera } from './office/useOfficeCamera';
 
 interface StageProps {
   state: CompanyState;
@@ -44,43 +18,15 @@ interface StageProps {
  * Supports pan, click selection, and smooth 2:1 dimetric projection.
  */
 export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
-  const { onSelectWorker } = props;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // Viewport camera state (pan & zoom)
-  const [camera, setCamera] = useState({ offsetX: 0, offsetY: 0, zoom: 1.0 });
   const latestProps = useRef(props);
-  const cameraRef = useRef(camera);
-  const layoutRef = useRef<{ phase: CompanyState['phase']; tiles: OfficeTile[] } | null>(null);
-  const layerRef = useRef<StaticLayer | null>(null);
+  const renderCache = useRef(createOfficeRenderCache());
   latestProps.current = props;
-  cameraRef.current = camera;
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0, pointerX: 0, pointerY: 0 });
-  const movedRef = useRef(false);
 
-  // Size the canvas to its actual viewport (below the HUD), not the full window.
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const handleResize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.round(rect.width * ratio));
-      canvas.height = Math.max(1, Math.round(rect.height * ratio));
-      const context = canvas.getContext('2d');
-      context?.setTransform(ratio, 0, 0, ratio, 0, 0);
-      setCamera((current) => current.offsetX === 0 && current.offsetY === 0
-        ? { offsetX: rect.width / 2, offsetY: rect.height / 2.15, zoom: Math.max(0.65, Math.min(1.1, rect.width / 900)) }
-        : current);
-    };
-
-    const observer = new ResizeObserver(handleResize);
-    observer.observe(canvas);
-    handleResize();
-    return () => observer.disconnect();
-  }, []);
+  const {
+    camera, cameraRef, isDragging, movedRef,
+    handlePointerDown, handlePointerMove, handlePointerUp, handleWheel, zoomAtCenter, resetCamera,
+  } = useOfficeCamera(canvasRef);
 
   // Main canvas animation and rendering loop
   useEffect(() => {
@@ -90,130 +36,19 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let startTime = performance.now();
-
+    const startTime = performance.now();
     let lastFrame = 0;
     const render = (now: number) => {
       // Behind the setup modal nothing needs 60 fps, so idle at ~20 fps until the game starts.
       if (!latestProps.current.state.hasStarted && now - lastFrame < 50) { animId = requestAnimationFrame(render); return; }
       lastFrame = now;
-      const animTime = (now - startTime) * 0.001;
-      const currentState = latestProps.current.state;
-      const currentCamera = cameraRef.current;
-      if (!layoutRef.current || layoutRef.current.phase !== currentState.phase) {
-        layoutRef.current = { phase: currentState.phase, tiles: getOfficeLayoutForPhase(currentState.phase) };
-      }
-      const currentTiles = layoutRef.current.tiles;
-      const currentGridSize = currentState.phase === 'GARAGEM' ? 6 : currentState.phase === 'LOFT_STARTUP' ? 8 : currentState.phase === 'CAMPUS_IA' ? 10 : 12;
-      const viewWidth = canvas.clientWidth;
-      const viewHeight = canvas.clientHeight;
-      ctx.clearRect(0, 0, viewWidth, viewHeight);
-      ctx.save();
-      ctx.translate(currentCamera.offsetX, currentCamera.offsetY);
-      ctx.scale(currentCamera.zoom, currentCamera.zoom);
-
-      const tileW = 64;
-      const tileH = 32;
-
-      // 1-2. Floor, rugs and back walls come from a cached layer (rebuilt only when the office phase changes)
-      if (!layerRef.current || layerRef.current.phase !== currentState.phase) {
-        layerRef.current = bakeStaticLayer(currentTiles, currentState.phase, currentGridSize);
-      }
-      const layer = layerRef.current;
-      if (layer) {
-        ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(layer.canvas, layer.minX, layer.minY, layer.w, layer.h);
-      }
-
-      // 3. Furniture and employees share one depth-sorted pass so nobody is drawn in front of things they stand behind
-      const renderables: Array<{ depth: number; draw: () => void }> = [];
-      currentTiles.forEach((tile) => {
-        const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, tileW, tileH, 0, 0);
-        const depth = tile.x + tile.y;
-        if (tile.type === 'DESK') {
-          const hasWorker = currentState.employees.some((e) => Math.round(e.x) === tile.x && Math.round(e.y) === tile.y);
-          renderables.push({ depth, draw: () => drawDeskStation(ctx, screenX, screenY, animTime, hasWorker) });
-        } else if (tile.type === 'SERVER') {
-          const loadRatio = Math.min(1.0, currentState.hardware.totalTeraflops / 10000);
-          renderables.push({ depth, draw: () => drawServerRack(ctx, screenX, screenY, animTime, loadRatio) });
-        } else if (tile.type === 'COFFEE') {
-          renderables.push({ depth, draw: () => drawCoffeeStation(ctx, screenX, screenY, animTime) });
-        } else if (tile.type === 'WHITEBOARD') {
-          renderables.push({ depth, draw: () => drawWhiteboard(ctx, screenX, screenY, animTime) });
-        } else if (tile.type === 'SOFA') {
-          renderables.push({ depth, draw: () => drawLoungeAndDecor(ctx, screenX, screenY, 'SOFA', animTime) });
-        } else if (tile.type === 'PLANT') {
-          renderables.push({ depth, draw: () => drawLoungeAndDecor(ctx, screenX, screenY, 'PLANT', animTime) });
-        } else if (tile.type === 'LAMP') {
-          renderables.push({ depth, draw: () => drawFloorLamp(ctx, screenX, screenY, animTime) });
-        } else if (tile.type === 'BOOKSHELF') {
-          renderables.push({ depth, draw: () => drawBookshelf(ctx, screenX, screenY) });
-        }
-      });
-      currentState.employees.forEach((emp) => {
-        const { screenX, screenY } = gridToIsometricScreen(emp.x, emp.y, tileW, tileH, 0, 0);
-        const isSelected = currentState.selectedWorkerId === emp.id;
-        renderables.push({ depth: emp.x + emp.y + 0.01, draw: () => drawCharacterModel(ctx, screenX, screenY + (emp.state === 'TYPING' ? -2 : 0), emp, animTime, isSelected) });
-      });
-      renderables.sort((a, b) => a.depth - b.depth).forEach((item) => item.draw());
-
-      // 4. Overhead activity bubbles always on top
-      currentState.employees.forEach((emp) => {
-        const { screenX, screenY } = gridToIsometricScreen(emp.x, emp.y, tileW, tileH, 0, 0);
-        drawOverheadStatusBubble(ctx, screenX, screenY, emp, animTime);
-      });
-
-      ctx.restore();
-      drawAtmosphere(ctx, viewWidth, viewHeight, animTime, currentState.phase);
+      renderOfficeFrame(ctx, canvas.clientWidth, canvas.clientHeight, latestProps.current.state, cameraRef.current, renderCache.current, (now - startTime) * 0.001);
       animId = requestAnimationFrame(render);
     };
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, []);
-
-  // Pan only the world canvas. Pointer capture keeps dragging reliable at viewport edges.
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (e.button !== 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    setIsDragging(true);
-    movedRef.current = false;
-    dragStart.current = {
-      x: cameraRef.current.offsetX,
-      y: cameraRef.current.offsetY,
-      pointerX: e.clientX - rect.left,
-      pointerY: e.clientY - rect.top,
-    };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDragging) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const dx = e.clientX - rect.left - dragStart.current.pointerX;
-    const dy = e.clientY - rect.top - dragStart.current.pointerY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) movedRef.current = true;
-    setCamera((prev) => ({
-      ...prev,
-      offsetX: dragStart.current.x + dx,
-      offsetY: dragStart.current.y + dy,
-    }));
-  };
-
-  const handlePointerUp = () => setIsDragging(false);
-
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pointerX = e.clientX - rect.left;
-    const pointerY = e.clientY - rect.top;
-    setCamera((prev) => {
-      const zoom = Math.max(0.55, Math.min(2.8, prev.zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
-      const worldX = (pointerX - prev.offsetX) / prev.zoom;
-      const worldY = (pointerY - prev.offsetY) / prev.zoom;
-      return { zoom, offsetX: pointerX - worldX * zoom, offsetY: pointerY - worldY * zoom };
-    });
-  };
+  }, [cameraRef]);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (movedRef.current) { movedRef.current = false; return; }
@@ -224,29 +59,6 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
     const { gridX, gridY } = isometricScreenToGrid(relX, relY, 64, 32, 0, 0);
     const clickedEmp = latestProps.current.state.employees.find((emp) => Math.abs(Math.round(emp.x) - gridX) <= 1 && Math.abs(Math.round(emp.y) - gridY) <= 1);
     latestProps.current.onSelectWorker(clickedEmp?.id ?? null);
-  };
-
-  const zoomAtCenter = (factor: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const centerX = canvas.clientWidth / 2;
-    const centerY = canvas.clientHeight / 2;
-    setCamera((prev) => {
-      const zoom = Math.max(0.55, Math.min(2.8, prev.zoom * factor));
-      const worldX = (centerX - prev.offsetX) / prev.zoom;
-      const worldY = (centerY - prev.offsetY) / prev.zoom;
-      return { zoom, offsetX: centerX - worldX * zoom, offsetY: centerY - worldY * zoom };
-    });
-  };
-
-  const resetCamera = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    setCamera({
-      offsetX: canvas.clientWidth / 2,
-      offsetY: canvas.clientHeight / 2.15,
-      zoom: Math.max(0.65, Math.min(1.1, canvas.clientWidth / 900)),
-    });
   };
 
   return (
@@ -267,15 +79,8 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
         className="absolute inset-0 block h-full w-full crisp-canvas"
       />
       <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.45) 100%)' }} />
-      <div className="pointer-events-none absolute bottom-4 left-4 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#101815]/85 px-3 py-2 text-[11px] text-[#d0ddd4] shadow-xl backdrop-blur-md sm:flex">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#a8d4b1]" />
-        Arraste para mover <span className="text-white/30">·</span> Scroll para aproximar
-      </div>
-      <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-xl border border-white/10 bg-[#101815]/90 p-1.5 text-[#d0ddd4] shadow-xl backdrop-blur-md">
-        <button type="button" aria-label="Diminuir zoom" title="Diminuir zoom" onClick={() => zoomAtCenter(1 / 1.2)} className="h-8 w-8 rounded-lg text-lg transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#b7d7bf]">−</button>
-        <button type="button" aria-label="Restaurar enquadramento" title="Restaurar enquadramento" onClick={resetCamera} className="min-w-14 rounded-lg px-2 py-2 text-[11px] font-medium tabular-nums transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#b7d7bf]">{Math.round(camera.zoom * 100)}%</button>
-        <button type="button" aria-label="Aumentar zoom" title="Aumentar zoom" onClick={() => zoomAtCenter(1.2)} className="h-8 w-8 rounded-lg text-lg transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#b7d7bf]">+</button>
-      </div>
+      <OfficeHintBadge />
+      <OfficeZoomControls zoom={camera.zoom} onZoomOut={() => zoomAtCenter(1 / 1.2)} onZoomIn={() => zoomAtCenter(1.2)} onReset={resetCamera} />
     </div>
   );
 }
