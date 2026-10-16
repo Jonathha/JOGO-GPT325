@@ -63,7 +63,7 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
     const reputationFactor = 0.7 + Math.max(0, Math.min(100, state.reputation)) / 100;
     const competitiveFactor = quality >= bestRivalQuality ? 1.25 : quality >= bestRivalQuality - 0.05 ? 1 : 0.78;
     const priceFactor = model.pricingMode === 'PAID'
-      ? Math.max(0.35, Math.min(1.25, 1.15 - (model.pricePerMillionOutput / averageRivalOutputPrice) * 0.3))
+      ? Math.max(0.35, Math.min(1.25, 1.15 - ((model.modality === 'IMAGE' ? model.pricePerImage / 0.08 : model.pricePerMillionOutput / averageRivalOutputPrice) * 0.3)))
       : 1;
     const acquisition = model.pricingMode === 'FREE'
       ? Math.round((model.modality === 'IMAGE' ? 7 : 10) + quality * (model.modality === 'IMAGE' ? 18 : 24) * reputationFactor * competitiveFactor)
