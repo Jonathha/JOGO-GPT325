@@ -73,7 +73,7 @@ export function updateModelTrainingStep(
 
     const newInvestedFlops = model.computeInvestedFlops + computeSharePerModel;
     const progressRatio = Math.min(1.0, newInvestedFlops / model.computeNeededFlops);
-    const progressPercent = Math.round(progressRatio * 100);
+    const progressPercent = isFinite(progressRatio) ? (progressRatio >= 1 ? 100 : Math.floor(progressRatio * 100)) : 0;
     const isNowFinished = progressRatio >= 1.0;
     const trainingStage = progressRatio < 0.05 ? 'DATA_PREPARATION'
       : progressRatio < 0.85 ? 'PRETRAINING'
@@ -81,7 +81,7 @@ export function updateModelTrainingStep(
       : progressRatio < 1 ? 'EVALUATION' : 'READY';
 
     // Power-law loss curve decay
-    const newLoss = Math.max(0.72, 4.2 * Math.exp(-progressRatio * 2.8));
+    const newLoss = Math.max(0.72, model.initialLoss * Math.exp(-progressRatio * 2.8));
 
     return {
       ...model,
