@@ -106,7 +106,9 @@ describe('AI model lifecycle and market simulation', () => {
     const state = createDefaultCompanyState();
     const freeImage = buildNewModelProject('Free Canvas', '7B', 'DIFFUSION_VISION', 1);
     Object.assign(freeImage, { isCompleted: true, isReleased: true, pricingMode: 'FREE', activeUsers: 80 });
-    const freeResult = processEndOfDayFinances({ ...state, models: [freeImage] }).models[0];
+    const freeState = processEndOfDayFinances({ ...state, models: [freeImage] });
+    const freeResult = freeState.models[0];
+    expect(freeState.funds).toBeLessThan(state.funds);
     expect(freeResult.dailyImageGenerations).toBeGreaterThan(0);
     expect(freeResult.dailyApiRevenue).toBe(0);
     expect(freeResult.dailyInferenceCost).toBeGreaterThan(0);
