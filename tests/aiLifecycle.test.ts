@@ -39,7 +39,7 @@ describe('AI model lifecycle and market simulation', () => {
     const model = buildNewModelProject('Titan test', '14B', 'REASONING_RL', 1);
     const state = createDefaultCompanyState();
     state.hasStarted = true;
-    state.hardware.totalTeraflops = 100000;
+    state.hardware.totalTeraflops = 10000;
     state.models = [model];
     const next = updateModelTrainingStep(state, 1).models[0];
     expect(next.trainingProgress).toBeGreaterThan(0);
