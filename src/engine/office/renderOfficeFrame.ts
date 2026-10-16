@@ -3,6 +3,7 @@ import { getOfficeLayoutForPhase } from '../../data/officeLayouts';
 import { gridToIsometricScreen } from '../isometricMath';
 import { drawAtmosphere } from '../drawOfficeFloors';
 import { drawOverheadStatusBubble } from '../drawCharacterBubbles';
+import { drawLampLights } from '../lighting/drawLampLights';
 import { bakeStaticLayer } from './bakeStaticLayer';
 import { buildOfficeRenderables } from './buildOfficeRenderables';
 import { getGridSizeForPhase } from './getGridSizeForPhase';
@@ -42,7 +43,10 @@ export function renderOfficeFrame(
   // 3. Furniture and employees share one depth-sorted pass so nobody is drawn in front of things they stand behind
   buildOfficeRenderables(ctx, tiles, state, animTime, TILE_W, TILE_H).forEach((item) => item.draw());
 
-  // 4. Overhead activity bubbles always on top
+  // 4. Lamp light is added on top of everything it reaches (additive), so furniture and people near a lamp look lit
+  drawLampLights(ctx, tiles, animTime, gridSize);
+
+  // 5. Overhead activity bubbles always on top
   state.employees.forEach((emp) => {
     const { screenX, screenY } = gridToIsometricScreen(emp.x, emp.y, TILE_W, TILE_H, 0, 0);
     drawOverheadStatusBubble(ctx, screenX, screenY, emp, animTime);

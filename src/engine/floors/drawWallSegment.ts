@@ -36,10 +36,16 @@ export function drawWallSegment(
     ctx.beginPath(); ctx.moveTo(mx, my - zb); ctx.lineTo(mx, my - zt); ctx.stroke();
     ctx.fillStyle = `rgba(255,255,255,${0.07 + 0.03 * Math.sin(animTime * 0.8 + index)})`;
     ctx.beginPath(); ctx.moveTo(x0, y0 - zt); ctx.lineTo(mx, my - zt); ctx.lineTo(x0, y0 - zb - 10); ctx.closePath(); ctx.fill();
-    // light shaft spilling onto the floor
+    // Light shaft spilling onto the floor: strongest at the window, fading out, with the mullion's shadow inside it
     const [dx, dy] = floorDir;
-    ctx.fillStyle = `rgba(${pal.light},${0.05 + 0.02 * Math.sin(animTime * 0.6 + index)})`;
-    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x1 + dx * 2.2, y1 + dy * 2.2); ctx.lineTo(x0 + dx * 2.2, y0 + dy * 2.2); ctx.closePath(); ctx.fill();
+    const reach = 2.4;
+    const [bx0, by0] = at(0.14); const [bx1, by1] = at(0.86); const [mx2, my2] = at(0.5);
+    const shaft = ctx.createLinearGradient(mx2, my2, mx2 + dx * reach, my2 + dy * reach);
+    shaft.addColorStop(0, `rgba(${pal.light},0.15)`); shaft.addColorStop(0.55, `rgba(${pal.light},0.06)`); shaft.addColorStop(1, `rgba(${pal.light},0)`);
+    ctx.fillStyle = shaft;
+    ctx.beginPath(); ctx.moveTo(bx0, by0); ctx.lineTo(bx1, by1); ctx.lineTo(bx1 + dx * reach, by1 + dy * reach); ctx.lineTo(bx0 + dx * reach, by0 + dy * reach); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.07)'; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(mx2, my2); ctx.lineTo(mx2 + dx * reach * 0.8, my2 + dy * reach * 0.8); ctx.stroke();
   } else {
     const [x0, y0] = at(0.3); const [x1, y1] = at(0.7);
     wallQuad(ctx, x0 - 1.5, y0, x1 + 1.5, y1, 25.5, 52.5, 'rgba(8,12,20,.85)');

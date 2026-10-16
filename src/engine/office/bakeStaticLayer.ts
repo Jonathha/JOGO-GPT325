@@ -2,6 +2,7 @@ import { CompanyState, OfficeTile } from '../../types/gameTypes';
 import { gridToIsometricScreen } from '../isometricMath';
 import { drawBackWalls, drawFloorTile } from '../drawOfficeFloors';
 import { drawRug } from '../drawOfficeFurniture';
+import { drawLampShadows } from '../lighting/drawLampShadows';
 
 export interface StaticLayer { phase: CompanyState['phase']; canvas: HTMLCanvasElement; minX: number; minY: number; w: number; h: number }
 
@@ -25,6 +26,7 @@ export function bakeStaticLayer(tiles: OfficeTile[], phase: CompanyState['phase'
     const { screenX, screenY } = gridToIsometricScreen(tile.x, tile.y, 64, 32, 0, 0);
     drawRug(c, screenX, screenY, 64, 32, phase, tile.x, tile.y);
   });
+  drawLampShadows(c, tiles);
   drawBackWalls(c, size, 64, 32, phase, 0);
   return { phase, canvas, minX, minY, w, h };
 }
