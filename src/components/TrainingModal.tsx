@@ -8,6 +8,7 @@ interface TrainingModalProps {
   currentDay: number;
   onClose: () => void;
   onCreateModel: (model: ModelProject) => void;
+  onLaunchModel: (id: string, mode: 'FREE' | 'PAID', inputPrice?: number, outputPrice?: number) => void;
 }
 
 /**
@@ -15,7 +16,7 @@ interface TrainingModalProps {
  * Shows active foundation model training runs, benchmark evaluations, and configuration form.
  */
 export function TrainingModal(props: TrainingModalProps): React.JSX.Element {
-  const { models, currentDay, onClose, onCreateModel } = props;
+  const { models, currentDay, onClose, onCreateModel, onLaunchModel } = props;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
@@ -36,7 +37,7 @@ export function TrainingModal(props: TrainingModalProps): React.JSX.Element {
 
         <div className="overflow-y-auto space-y-4 pr-1 flex-1">
           {/* New Model Form */}
-          <TrainingNewModelForm currentDay={currentDay} onCreateModel={onCreateModel} />
+          <TrainingNewModelForm currentDay={currentDay} models={models} onCreateModel={onCreateModel} />
 
           {/* Model Roster */}
           <div className="space-y-2">
@@ -46,7 +47,7 @@ export function TrainingModal(props: TrainingModalProps): React.JSX.Element {
                 Nenhum modelo em treinamento. Configure seu primeiro modelo acima!
               </div>
             ) : (
-              models.map((model) => <TrainingModelCard key={model.id} model={model} />)
+              models.map((model) => <TrainingModelCard key={model.id} model={model} onLaunchModel={onLaunchModel} />)
             )}
           </div>
         </div>

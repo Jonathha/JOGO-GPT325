@@ -15,6 +15,7 @@ import { HiringModal } from './components/HiringModal';
 import { HardwareModal } from './components/HardwareModal';
 import { OfficeModal } from './components/OfficeModal';
 import { NewsModal } from './components/NewsModal';
+import { ManagementDashboardModal } from './components/ManagementDashboardModal';
 
 /**
  * Main application entry point for AI Titan Tycoon.
@@ -115,6 +116,15 @@ export default function App(): React.JSX.Element {
     }));
   };
 
+  const handleLaunchModel = (id: string, mode: 'FREE' | 'PAID', inputPrice = 0.5, outputPrice = 1.5) => {
+    setState((prev) => ({
+      ...prev,
+      models: prev.models.map((model) => model.id === id && model.isCompleted && !model.isReleased
+        ? { ...model, isReleased: true, pricingMode: mode, pricePerMillionInput: mode === 'PAID' ? inputPrice : 0, pricePerMillionOutput: mode === 'PAID' ? outputPrice : 0, dailyApiRevenue: 0, dailyInferenceCost: 0 }
+        : model),
+    }));
+  };
+
   const handleHireCandidate = (candidate: Employee) => {
     if (state.funds < 25000) return;
     setState((prev) => ({
@@ -191,6 +201,7 @@ export default function App(): React.JSX.Element {
           currentDay={state.day}
           onClose={handleCloseModal}
           onCreateModel={handleCreateModel}
+          onLaunchModel={handleLaunchModel}
         />
       )}
 
@@ -226,6 +237,8 @@ export default function App(): React.JSX.Element {
           onUpgradePhase={handleUpgradePhase}
         />
       )}
+
+      {state.activeModal === 'DASHBOARD' && <ManagementDashboardModal state={state} onClose={handleCloseModal} />}
 
       {state.activeModal === 'NEWS' && (
         <NewsModal

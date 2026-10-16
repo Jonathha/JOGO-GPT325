@@ -33,6 +33,9 @@ export interface Employee {
 
 export type ArchitectureType = 'TRANSFORMER_DENSE' | 'MOE_SPARSE' | 'REASONING_RL' | 'DIFFUSION_VISION';
 
+export type TrainingStrategy = 'FROM_SCRATCH' | 'FINE_TUNE' | 'CONTINUED' | 'DISTILLATION';
+export type TrainingStage = 'DATA_PREPARATION' | 'PRETRAINING' | 'POST_TRAINING' | 'EVALUATION' | 'READY';
+
 export interface ModelProject {
   id: string;
   name: string;
@@ -40,6 +43,9 @@ export interface ModelProject {
   paramsBillion: number;
   architecture: ArchitectureType;
   architectureName: string;
+  trainingStrategy: TrainingStrategy;
+  trainingStage: TrainingStage;
+  baseModelId: string | null;
   computeNeededFlops: number;
   computeInvestedFlops: number;
   trainingProgress: number; // 0 to 100%
@@ -50,6 +56,11 @@ export interface ModelProject {
   mathScore: number;
   dailyApiRevenue: number;
   activeUsers: number;
+  isReleased: boolean;
+  pricingMode: 'UNRELEASED' | 'FREE' | 'PAID';
+  pricePerMillionInput: number;
+  pricePerMillionOutput: number;
+  dailyInferenceCost: number;
   hypeBoost: number;
   creationDay: number;
 }
@@ -116,5 +127,5 @@ export interface CompanyState {
   rounds: InvestorRound[];
   gridSize: number;
   selectedWorkerId: string | null;
-  activeModal: 'NONE' | 'TRAINING' | 'HIRING' | 'HARDWARE' | 'OFFICE' | 'NEWS' | 'WORKER_DETAIL';
+  activeModal: 'NONE' | 'TRAINING' | 'HIRING' | 'HARDWARE' | 'OFFICE' | 'NEWS' | 'WORKER_DETAIL' | 'DASHBOARD';
 }

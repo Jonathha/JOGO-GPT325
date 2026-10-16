@@ -1,4 +1,5 @@
 import { CompanyState } from '../types/gameTypes';
+import { RIVAL_MODELS } from '../data/rivalModels';
 
 /**
  * Calculates current market valuation based on AI models, revenue multiple, and team reputation.
@@ -53,44 +54,37 @@ export function recalculateCompanyValuation(state: CompanyState): number {
  * - Recomputes company market valuation and checks phase milestones
  */
 export function processEndOfDayFinances(state: CompanyState): CompanyState {
-  // Aggregate revenue from all active AI model APIs
-  const completedModels = state.models.filter((m) => m.isCompleted);
-  const dailyApiIncome = completedModels.reduce((acc, m) => acc + m.dailyApiRevenue, 0);
-
-  // Calculate daily payroll
-  const dailyPayroll = state.employees.reduce((acc, emp) => acc + emp.salaryPerDay, 0);
-
-  // Cloud GPU rental fee ($18 per cloud GPU/day) + power costs
-  const cloudGpuCost = state.hardware.cloudGPUs * 18;
-  const totalDailyExpenses = dailyPayroll + cloudGpuCost + state.hardware.dailyPowerCost;
-
-  // Net operating cash flow
-  const netDailyCashFlow = dailyApiIncome - totalDailyExpenses;
-  const updatedFunds = state.funds + netDailyCashFlow;
-
-  // Compute updated company valuation
-  const partialState = {
-    ...state,
-    funds: updatedFunds,
-  };
-  const updatedValuation = recalculateCompanyValuation(partialState);
-
-  // Auto-grow user base for completed models (viral API adoption)
-  const upgradedModels = state.models.map((model) => {
-    if (!model.isCompleted) return model;
-    const userGrowth = Math.round(15 + model.mmluScore * 0.8);
-    const revenueGrowth = Math.round(userGrowth * 0.04);
-    return {
-      ...model,
-      activeUsers: model.activeUsers + userGrowth,
-      dailyApiRevenue: model.dailyApiRevenue + revenueGrowth,
-    };
+  const bestRivalQuality = Math.max(...RIVAL_MODELS.map((rival) => (rival.mmlu + rival.coding + rival.math) / 300));
+  const cheapestRivalOutput = Math.min(...RIVAL_MODELS.map((rival) => rival.outputPrice));
+  const models = state.models.map((model) => {
+    if (!model.isCompleted || !model.isReleased) return model;
+    const quality = (model.mmluScore + model.codingScore + model.mathScore) / 300;
+    const reputationFactor = 0.7 + state.reputation / 100;
+    const competitiveFactor = quality >= bestRivalQuality ? 1.25 : quality >= bestRivalQuality - 0.05 ? 1 : 0.78;
+    const priceFactor = model.pricingMode === 'PAID' && model.pricePerMillionOutput <= cheapestRivalOutput ? 1.2 : model.pricePerMillionOutput > 2 ? 0.65 : 1;
+    const pricePenalty = model.pricingMode === 'PAID' ? Math.max(0, model.pricePerMillionOutput - 1) * 2 : 0;
+    const acquisition = model.pricingMode === 'FREE'
+      ? Math.round((10 + quality * 24) * reputationFactor * competitiveFactor)
+      : Math.max(0, Math.round((3 + quality * 9 - pricePenalty) * reputationFactor * competitiveFactor * priceFactor));
+    const activeUsers = model.activeUsers + acquisition;
+    const requestsPerUser = 6;
+    const revenuePerRequest = model.pricingMode === 'PAID'
+      ? (700 * model.pricePerMillionInput + 350 * model.pricePerMillionOutput) / 1_000_000
+      : 0;
+    const inferenceCostPerRequest = 0.00004 + model.paramsBillion * 0.0000001;
+    const dailyApiRevenue = activeUsers * requestsPerUser * revenuePerRequest;
+    const dailyInferenceCost = activeUsers * requestsPerUser * inferenceCostPerRequest;
+    return { ...model, activeUsers, dailyApiRevenue, dailyInferenceCost };
   });
-
+  const dailyApiIncome = models.reduce((sum, model) => sum + model.dailyApiRevenue, 0);
+  const dailyInferenceCost = models.reduce((sum, model) => sum + model.dailyInferenceCost, 0);
+  const dailyPayroll = state.employees.reduce((sum, employee) => sum + employee.salaryPerDay, 0);
+  const cloudGpuCost = state.hardware.cloudGPUs * 18;
+  const totalDailyExpenses = dailyPayroll + cloudGpuCost + state.hardware.dailyPowerCost + dailyInferenceCost;
+  const updatedFunds = state.funds + dailyApiIncome - totalDailyExpenses;
+  const partialState = { ...state, funds: updatedFunds, models };
   return {
-    ...state,
-    funds: updatedFunds,
-    valuation: updatedValuation,
-    models: upgradedModels,
+    ...partialState,
+    valuation: recalculateCompanyValuation(partialState),
   };
 }
