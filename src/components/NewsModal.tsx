@@ -48,7 +48,7 @@ export function NewsModal({ headlines, soundEnabled, onClose, onMarkRead }: News
             <span className="shrink-0 text-[10px] font-mono text-[#91a399]">{visible.length} {visible.length === 1 ? 'registro' : 'registros'}</span>
           </div>
           {visible.length === 0 ? <div className="rounded-xl border border-dashed border-[#34443d] px-5 py-12 text-center"><p className="text-sm font-medium text-[#d9e2dc]">Nenhuma notícia nesta seção</p><p className="mt-1 text-xs text-[#91a399]">Novos acontecimentos aparecerão aqui durante a simulação.</p></div> : (
-            <div className="grid gap-3 lg:grid-cols-2">{visible.map((headline) => <NewsHeadlineCard key={headline.id} headline={headline} onOpen={() => setSelected(headline)} onMarkRead={() => { playUiClick(soundEnabled); onMarkRead(headline.id); }} />)}</div>
+            <div className="grid gap-3 lg:grid-cols-2">{visible.map((headline) => <NewsHeadlineCard key={headline.id} headline={headline} onOpen={() => { setSelected({ ...headline, read: true }); if (!headline.read) onMarkRead(headline.id); }} onMarkRead={() => { playUiClick(soundEnabled); onMarkRead(headline.id); }} />)}</div>
           )}
         </div>
         <footer className="flex items-center justify-between border-t border-[#2a3932] px-5 py-3 text-[10px] text-[#819288] sm:px-7"><span>Arquivo limitado aos 20 eventos mais recentes.</span><span>Dia atual · notícias simuladas</span></footer>
