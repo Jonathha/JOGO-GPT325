@@ -45,7 +45,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const context = canvas.getContext('2d');
       context?.setTransform(ratio, 0, 0, ratio, 0, 0);
       setCamera((current) => current.offsetX === 0 && current.offsetY === 0
-        ? { offsetX: rect.width / 2, offsetY: rect.height / 2.15, zoom: Math.max(0.65, Math.min(1.1, rect.width / 900)) }
+        ? { offsetX: rect.width / 2, offsetY: rect.height / 2.15, zoom: Math.max(0.72, Math.min(1.08, rect.width / 1100)) }
         : current);
     };
 
@@ -82,8 +82,8 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       ctx.translate(currentCamera.offsetX, currentCamera.offsetY);
       ctx.scale(currentCamera.zoom, currentCamera.zoom);
 
-      const tileW = 64;
-      const tileH = 32;
+      const tileW = 80;
+      const tileH = 40;
 
       // 1. Draw office floor tiles
       currentTiles.forEach((tile) => {
@@ -189,7 +189,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
     const currentCamera = cameraRef.current;
     const relX = (e.clientX - rect.left - currentCamera.offsetX) / currentCamera.zoom;
     const relY = (e.clientY - rect.top - currentCamera.offsetY) / currentCamera.zoom;
-    const { gridX, gridY } = isometricScreenToGrid(relX, relY, 64, 32, 0, 0);
+    const { gridX, gridY } = isometricScreenToGrid(relX, relY, 80, 40, 0, 0);
     const clickedEmp = latestProps.current.state.employees.find((emp) => Math.abs(Math.round(emp.x) - gridX) <= 1 && Math.abs(Math.round(emp.y) - gridY) <= 1);
     latestProps.current.onSelectWorker(clickedEmp?.id ?? null);
   };
@@ -213,7 +213,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
     setCamera({
       offsetX: canvas.clientWidth / 2,
       offsetY: canvas.clientHeight / 2.15,
-      zoom: Math.max(0.65, Math.min(1.1, canvas.clientWidth / 900)),
+      zoom: Math.max(0.72, Math.min(1.08, canvas.clientWidth / 1100)),
     });
   };
 
