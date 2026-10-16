@@ -91,7 +91,7 @@ export function CityStage({ companyName, day, valuation }: CityStageProps): Reac
       frame += 1;
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = '#e8e8d9'; ctx.fillRect(0, 0, width, height);
-      const unit = Math.max(1, Math.min(width / 1000, height / 620));
+      const unit = Math.max(0.45, Math.min(width / 1000, height / 620));
       const road = 76 * unit;
       const margin = 34 * unit;
       const blockW = Math.max(115 * unit, (width - margin * 2 - road * 2) / 3);
@@ -103,9 +103,9 @@ export function CityStage({ companyName, day, valuation }: CityStageProps): Reac
       ctx.fillStyle = '#8c9998';
       for (let i = 0; i < 4; i++) {
         const x = startX - road + i * (blockW + road);
-        if (i < 3) ctx.fillRect(x, 0, road, height);
+        ctx.fillRect(x, 0, road, height);
         const y = startY - road + i * (blockH + road);
-        if (i < 3) ctx.fillRect(0, y, width, road);
+        ctx.fillRect(0, y, width, road);
       }
       ctx.fillStyle = '#aab3b0';
       for (let i = 0; i < 3; i++) {
@@ -167,7 +167,7 @@ export function CityStage({ companyName, day, valuation }: CityStageProps): Reac
   const money = valuation >= 1_000_000_000 ? `$${(valuation / 1_000_000_000).toFixed(1)}B` : valuation >= 1_000_000 ? `$${(valuation / 1_000_000).toFixed(1)}M` : `$${Math.round(valuation / 1000)}K`;
 
   return (
-    <section className="absolute inset-0 top-[52px] overflow-hidden bg-[#e8e8d9]">
+    <section className="absolute inset-x-0 bottom-0 top-[52px] overflow-hidden bg-[#e8e8d9]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-label="Mapa demonstrativo da cidade em visão superior" />
       <div className="pointer-events-none absolute left-5 top-5 flex max-w-[calc(100%-2.5rem)] flex-col gap-1 rounded-xl border border-white/70 bg-[#f7f7ef]/95 px-4 py-3 shadow-lg shadow-slate-900/10">
         <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#55736c]">Distrito de inovação · mapa demonstrativo</span>
