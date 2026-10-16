@@ -28,7 +28,7 @@ export function SpeedAndAudioControls(props: {
         {speeds.map((s) => {
           const isActive = speed === s;
           const label = s === 0 ? '⏸' : `${s}x`;
-          const activeStyle = 'bg-sky-500 text-slate-950 font-bold';
+          const activeStyle = 'bg-[#d6e5d8] text-[#203a34] font-bold';
           const inactiveStyle = 'text-slate-400 hover:text-white';
           return (
             <button
@@ -53,11 +53,11 @@ export function SpeedAndAudioControls(props: {
           onToggleSound();
         }}
         className={`px-2 py-1 text-xs rounded border transition-colors cursor-pointer ${
-          soundEnabled ? 'border-slate-800 text-slate-300 bg-slate-900' : 'border-red-900/50 text-red-400 bg-red-950/20'
+          soundEnabled ? 'border-[#354740] text-[#c4d2c9] bg-[#192722]' : 'border-[#654544] text-[#e5b8b3] bg-[#321f20]'
         }`}
         title={soundEnabled ? 'Silenciar Áudio' : 'Ativar Áudio'}
       >
-        {soundEnabled ? '🔊' : '🔇'}
+        {soundEnabled ? 'Som' : 'Mudo'}
       </button>
     </div>
   );
@@ -82,8 +82,8 @@ export function TopBarActionButtons(props: TopBarActionsProps): React.JSX.Elemen
   return (
     <div className="flex items-center gap-1.5">
       {navItems.map((item) => {
-        const primaryClass = 'text-slate-950 bg-sky-400 hover:bg-sky-300 font-semibold shadow-sm';
-        const secondaryClass = 'text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 font-medium';
+        const primaryClass = 'text-[#203a34] bg-[#d6e5d8] hover:bg-[#e5eee4] font-semibold shadow-sm';
+        const secondaryClass = 'text-[#c2cec6] hover:text-white bg-[#192722] hover:bg-[#24352e] border border-[#354740] font-medium';
         const itemClass = item.isPrimary ? primaryClass : secondaryClass;
 
         return (

@@ -9,6 +9,7 @@ import { playBreakingNewsAlert, playTrainingCompleteChime } from './engine/audio
 import { TopBarHUD } from './components/TopBarHUD';
 import { CompanySetupModal } from './components/CompanySetupModal';
 import { IsometricOfficeStage } from './components/IsometricOfficeStage';
+import { CityStage } from './components/CityStage';
 import { TrainingModal } from './components/TrainingModal';
 import { HiringModal } from './components/HiringModal';
 import { HardwareModal } from './components/HardwareModal';
@@ -22,6 +23,7 @@ import { NewsModal } from './components/NewsModal';
 export default function App(): React.JSX.Element {
   const [state, setState] = useState<CompanyState>(createDefaultCompanyState);
   const [candidates, setCandidates] = useState<Employee[]>([]);
+  const [activeView, setActiveView] = useState<'office' | 'city'>('office');
 
   // Initialize candidates market on startup
   useEffect(() => {
@@ -157,7 +159,7 @@ export default function App(): React.JSX.Element {
   };
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-slate-950 font-sans select-none">
+    <div className="relative h-full w-full select-none overflow-hidden bg-[#101817] font-sans">
       {/* Initial Company Setup Modal */}
       {!state.hasStarted && (
         <CompanySetupModal onStartCompany={handleStartCompany} soundEnabled={state.soundEnabled} />
@@ -169,12 +171,18 @@ export default function App(): React.JSX.Element {
         onSetGameSpeed={handleSetGameSpeed}
         onToggleSound={handleToggleSound}
         onOpenModal={handleOpenModal}
+        activeView={activeView}
+        onChangeView={setActiveView}
       />
 
-      {/* Isometric Office Stage */}
-      <div className="w-full h-full pt-13">
-        <IsometricOfficeStage state={state} onSelectWorker={(id) => setState((prev) => ({ ...prev, selectedWorkerId: id }))} />
-      </div>
+      {/* Separate world views: the city is a demonstration map, never part of the office. */}
+      {activeView === 'office' ? (
+        <div className="absolute inset-0 pt-[52px]">
+          <IsometricOfficeStage state={state} onSelectWorker={(id) => setState((prev) => ({ ...prev, selectedWorkerId: id }))} />
+        </div>
+      ) : (
+        <CityStage companyName={state.companyName} day={state.day} valuation={state.valuation} />
+      )}
 
       {/* Modals */}
       {state.activeModal === 'TRAINING' && (
