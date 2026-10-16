@@ -59,9 +59,10 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
   const averageRivalOutputPrice = rivals.reduce((sum, rival) => sum + rival.outputPrice, 0) / rivals.length;
   const models = state.models.map((model) => {
     if (!model.isCompleted || !model.isReleased) return model;
-    const quality = (model.mmluScore + model.codingScore + model.mathScore) / 300;
+    const quality = model.modality === 'IMAGE' ? model.imageQuality / 100 : (model.mmluScore + model.codingScore + model.mathScore) / 300;
+    const marketBenchmark = model.modality === 'IMAGE' ? 0.78 : bestRivalQuality;
     const reputationFactor = 0.7 + Math.max(0, Math.min(100, state.reputation)) / 100;
-    const competitiveFactor = quality >= bestRivalQuality ? 1.25 : quality >= bestRivalQuality - 0.05 ? 1 : 0.78;
+    const competitiveFactor = quality >= marketBenchmark ? 1.25 : quality >= marketBenchmark - 0.05 ? 1 : 0.78;
     const priceFactor = model.pricingMode === 'PAID'
       ? Math.max(0.35, Math.min(1.25, 1.15 - ((model.modality === 'IMAGE' ? model.pricePerImage / 0.08 : model.pricePerMillionOutput / averageRivalOutputPrice) * 0.3)))
       : 1;
