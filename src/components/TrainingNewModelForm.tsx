@@ -9,10 +9,10 @@ interface FormProps {
 
 export function buildNewModelProject(name: string, paramChoice: '7B' | '14B' | '70B' | '405B', archChoice: ArchitectureType, currentDay: number, strategy: TrainingStrategy = 'FROM_SCRATCH', baseModel: ModelProject | null = null): ModelProject {
   const configs = {
-    '7B': { params: 7, flops: 2.5e17, mmlu: 68, coding: 64, math: 58 },
-    '14B': { params: 14, flops: 7e17, mmlu: 76, coding: 73, math: 69 },
-    '70B': { params: 70, flops: 3.5e18, mmlu: 86, coding: 82, math: 81 },
-    '405B': { params: 405, flops: 2.2e19, mmlu: 92, coding: 89, math: 90 },
+    '7B': { params: 7, flops: 2.5e16, mmlu: 68, coding: 64, math: 58 },
+    '14B': { params: 14, flops: 7e16, mmlu: 76, coding: 73, math: 69 },
+    '70B': { params: 70, flops: 3.5e17, mmlu: 86, coding: 82, math: 81 },
+    '405B': { params: 405, flops: 2.2e18, mmlu: 92, coding: 89, math: 90 },
   };
   const inherited = strategy !== 'FROM_SCRATCH' ? baseModel : null;
   const inheritedSize = inherited?.paramSize as keyof typeof configs | undefined;
@@ -27,7 +27,7 @@ export function buildNewModelProject(name: string, paramChoice: '7B' | '14B' | '
     id: 'model-' + Date.now(), name: name.trim() || 'Titan-' + size, paramSize: size, paramsBillion: inherited && (strategy === 'FINE_TUNE' || strategy === 'CONTINUED') ? inherited.paramsBillion : selected.params,
     architecture, architectureName, trainingStrategy: strategy, trainingStage: 'DATA_PREPARATION', version: inherited ? inherited.version + 1 : 1, baseModelId: inherited?.id ?? null, baseModelName: inherited?.name ?? null,
     computeNeededFlops: selected.flops * multiplier, computeInvestedFlops: 0, trainingProgress: 0, currentLoss: inherited ? Math.max(0.72, inherited.currentLoss - 0.1) : 4.15, initialLoss: inherited ? Math.max(0.72, inherited.currentLoss - 0.1) : 4.15,
-    isCompleted: false, mmluScore: Math.max(1, score(selected.mmlu, 'mmlu') - 8), codingScore: Math.max(1, score(selected.coding, 'coding') - 8), mathScore: Math.max(1, score(selected.math, 'math') - 8), targetMmluScore: score(selected.mmlu, 'mmlu'), targetCodingScore: score(selected.coding, 'coding'), targetMathScore: score(selected.math, 'math'),
+    isCompleted: false, isTrainingPaused: false, mmluScore: Math.max(1, score(selected.mmlu, 'mmlu') - 8), codingScore: Math.max(1, score(selected.coding, 'coding') - 8), mathScore: Math.max(1, score(selected.math, 'math') - 8), targetMmluScore: score(selected.mmlu, 'mmlu'), targetCodingScore: score(selected.coding, 'coding'), targetMathScore: score(selected.math, 'math'),
     dailyApiRevenue: 0, activeUsers: 0, dailyNewUsers: 0, isReleased: false, pricingMode: 'UNRELEASED', pricePerMillionInput: 0.5, pricePerMillionOutput: 1.5, dailyInferenceCost: 0,
     hypeBoost: selected.params * 0.1, creationDay: currentDay,
   };
