@@ -24,7 +24,7 @@ export function buildNewModelProject(name: string, paramChoice: '7B' | '14B' | '
   const architecture = inherited && (strategy === 'FINE_TUNE' || strategy === 'CONTINUED') ? inherited.architecture : archChoice;
   const architectureName = architecture === 'REASONING_RL' ? 'Raciocínio RL' : architecture === 'MOE_SPARSE' ? 'Mixture of Experts' : architecture === 'DIFFUSION_VISION' ? 'Difusão visual' : 'Transformer Denso';
   return {
-    id: 'model-' + Date.now(), name: name.trim() || 'Titan-' + size, paramSize: size, paramsBillion: inherited && (strategy === 'FINE_TUNE' || strategy === 'CONTINUED') ? inherited.paramsBillion : selected.params,
+    id: 'model-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), name: name.trim() || 'Titan-' + size, paramSize: size, paramsBillion: inherited && (strategy === 'FINE_TUNE' || strategy === 'CONTINUED') ? inherited.paramsBillion : selected.params,
     architecture, architectureName, trainingStrategy: strategy, trainingStage: 'DATA_PREPARATION', version: inherited ? inherited.version + 1 : 1, baseModelId: inherited?.id ?? null, baseModelName: inherited?.name ?? null,
     computeNeededFlops: selected.flops * multiplier, computeInvestedFlops: 0, trainingProgress: 0, currentLoss: inherited ? Math.max(0.72, inherited.currentLoss - 0.1) : 4.15, initialLoss: inherited ? Math.max(0.72, inherited.currentLoss - 0.1) : 4.15,
     isCompleted: false, isTrainingPaused: false, mmluScore: Math.max(1, score(selected.mmlu, 'mmlu') - 8), codingScore: Math.max(1, score(selected.coding, 'coding') - 8), mathScore: Math.max(1, score(selected.math, 'math') - 8), targetMmluScore: score(selected.mmlu, 'mmlu'), targetCodingScore: score(selected.coding, 'coding'), targetMathScore: score(selected.math, 'math'),
