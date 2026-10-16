@@ -1,240 +1,89 @@
-/**
- * Draws an isometric developer workstation with dual glowing monitors,
- * ergonomic desk surface, cable grommets, and animated terminal displays.
- */
-export function drawDeskStation(
-  ctx: CanvasRenderingContext2D,
-  sx: number,
-  sy: number,
-  animTime: number,
-  hasWorker: boolean
-): void {
+import { drawIsoBox, drawRoundedScreen } from './drawOfficePrimitives';
+
+export function drawDeskStation(ctx: CanvasRenderingContext2D, sx: number, sy: number, animTime: number, hasWorker: boolean): void {
   ctx.save();
-  // Wooden / composite desk top surface
-  ctx.beginPath();
-  ctx.moveTo(sx - 24, sy - 12);
-  ctx.lineTo(sx, sy - 24);
-  ctx.lineTo(sx + 24, sy - 12);
-  ctx.lineTo(sx, sy);
-  ctx.closePath();
-  ctx.fillStyle = '#1e293b';
-  ctx.fill();
-  ctx.strokeStyle = '#334155';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Dual glowing ultra-wide monitor screens
-  const monitorGlow = 0.5 + 0.5 * Math.sin(animTime * 3);
-  const screenColor = hasWorker ? `rgba(56, 189, 248, ${0.7 + monitorGlow * 0.2})` : 'rgba(71, 85, 105, 0.4)';
-
-  // Left primary monitor
-  ctx.fillStyle = screenColor;
-  ctx.fillRect(sx - 14, sy - 26, 12, 10);
-  ctx.strokeStyle = '#0f172a';
-  ctx.strokeRect(sx - 14, sy - 26, 12, 10);
-
-  // Right vertical monitor
-  ctx.fillStyle = hasWorker ? 'rgba(52, 211, 153, 0.75)' : 'rgba(71, 85, 105, 0.3)';
-  ctx.fillRect(sx + 2, sy - 28, 8, 14);
-  ctx.strokeRect(sx + 2, sy - 28, 8, 14);
-
-  // Ergonomic office chair behind or in front of desk
-  ctx.beginPath();
-  ctx.arc(sx, sy + 6, 6, 0, Math.PI * 2);
-  ctx.fillStyle = '#0f172a';
-  ctx.fill();
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(sx, sy + 4, 24, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#29342e'; ctx.beginPath(); ctx.ellipse(sx, sy + 4, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+  drawIsoBox(ctx, sx, sy + 4, 4, 4, 7, '#56645a', '#27322b', '#1c2620');
+  drawIsoBox(ctx, sx, sy - 2, 35, 20, 4, '#b18a5d', '#70553b', '#4c3a2a');
+  drawIsoBox(ctx, sx - 11, sy + 4, 3, 3, 7, '#7c654b', '#473a2d', '#342b22');
+  drawIsoBox(ctx, sx + 11, sy + 4, 3, 3, 7, '#7c654b', '#473a2d', '#342b22');
+  drawIsoBox(ctx, sx - 7, sy - 10, 2, 2, 7, '#59675f', '#2a342e', '#202923');
+  drawIsoBox(ctx, sx + 7, sy - 10, 2, 2, 8, '#59675f', '#2a342e', '#202923');
+  drawRoundedScreen(ctx, sx - 7, sy - 17, 12, 10, hasWorker, '#9ac8a7');
+  drawRoundedScreen(ctx, sx + 8, sy - 18, 9, 13, hasWorker, '#b5d8bf');
+  drawIsoBox(ctx, sx, sy - 5, 12, 5, 1.5, '#4e5a51', '#29332c', '#202923');
+  ctx.fillStyle = hasWorker ? '#b6d8bf' : '#66766b'; ctx.beginPath(); ctx.arc(sx + 13, sy - 4, 1, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
 
-/**
- * Draws an enterprise AI GPU server rack with active cooling fans
- * and animated pulsating status LEDs reflecting compute workload.
- */
-export function drawServerRack(
-  ctx: CanvasRenderingContext2D,
-  sx: number,
-  sy: number,
-  animTime: number,
-  loadRatio: number
-): void {
+export function drawServerRack(ctx: CanvasRenderingContext2D, sx: number, sy: number, animTime: number, loadRatio: number): void {
   ctx.save();
-  const rackW = 20;
-  const rackH = 46;
-
-  // Server rack main obsidian enclosure
-  ctx.fillStyle = '#020617';
-  ctx.fillRect(sx - rackW / 2, sy - rackH, rackW, rackH);
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(sx - rackW / 2, sy - rackH, rackW, rackH);
-
-  // Server blade horizontal slots and pulsating LED indicators
-  const bladeCount = 5;
-  for (let i = 0; i < bladeCount; i++) {
-    const slotY = sy - rackH + 6 + i * 8;
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(sx - rackW / 2 + 2, slotY, rackW - 4, 6);
-
-    // Blinking activity LEDs
-    const blinkFreq = 4 + i * 2;
-    const isLit = Math.sin(animTime * blinkFreq + i) > (0.3 - loadRatio * 0.4);
-    const ledColor = isLit ? (i % 2 === 0 ? '#10b981' : '#38bdf8') : '#1e293b';
-
-    ctx.fillStyle = ledColor;
-    ctx.beginPath();
-    ctx.arc(sx - rackW / 2 + 5, slotY + 3, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(sx + rackW / 2 - 5, slotY + 3, 1.5, 0, Math.PI * 2);
-    ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.32)'; ctx.beginPath(); ctx.ellipse(sx, sy + 3, 18, 6, 0, 0, Math.PI * 2); ctx.fill();
+  drawIsoBox(ctx, sx, sy, 23, 17, 45, '#45544b', '#202a25', '#111a16', '#64756a');
+  const load = Math.max(0, Math.min(1, loadRatio));
+  for (let i = 0; i < 5; i++) {
+    const yy = sy - 37 + i * 7;
+    ctx.fillStyle = '#0a100d'; ctx.fillRect(sx - 8, yy, 14, 5);
+    ctx.strokeStyle = '#526359'; ctx.lineWidth = .6; ctx.strokeRect(sx - 8, yy, 14, 5);
+    for (let fan = 0; fan < 2; fan++) {
+      const fx = sx - 4 + fan * 7;
+      ctx.beginPath(); ctx.arc(fx, yy + 2.5, 1.4, 0, Math.PI * 2);
+      ctx.fillStyle = '#1c2b23'; ctx.fill(); ctx.strokeStyle = '#71867a'; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(fx - 1, yy + 2.5); ctx.lineTo(fx + 1, yy + 2.5); ctx.stroke();
+    }
+    const lit = Math.sin(animTime * (3 + i) + i) > .15 - load * .5;
+    ctx.fillStyle = lit ? (i % 2 ? '#b5d9bc' : '#d3bd83') : '#34443a';
+    ctx.beginPath(); ctx.arc(sx + 8, yy + 2.5, 1, 0, Math.PI * 2); ctx.fill();
   }
   ctx.restore();
 }
 
-/**
- * Draws the startup coffee and espresso bar with animated rising steam
- * that fuels researcher velocity and morale.
- */
-export function drawCoffeeStation(
-  ctx: CanvasRenderingContext2D,
-  sx: number,
-  sy: number,
-  animTime: number
-): void {
+export function drawCoffeeStation(ctx: CanvasRenderingContext2D, sx: number, sy: number, animTime: number): void {
   ctx.save();
-  // Wooden barista prep table
-  ctx.beginPath();
-  ctx.moveTo(sx - 16, sy - 8);
-  ctx.lineTo(sx, sy - 16);
-  ctx.lineTo(sx + 16, sy - 8);
-  ctx.lineTo(sx, sy);
-  ctx.closePath();
-  ctx.fillStyle = '#78350f';
-  ctx.fill();
-  ctx.strokeStyle = '#92400e';
-  ctx.stroke();
-
-  // Italian espresso machine body
-  ctx.fillStyle = '#cbd5e1';
-  ctx.fillRect(sx - 8, sy - 22, 16, 12);
-  ctx.strokeStyle = '#475569';
-  ctx.strokeRect(sx - 8, sy - 22, 16, 12);
-
-  // Animated rising coffee steam particles
-  const steamOffset1 = (animTime * 18) % 16;
-  const steamOffset2 = ((animTime + 0.4) * 18) % 16;
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-  ctx.beginPath();
-  ctx.arc(sx - 3, sy - 24 - steamOffset1, 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.arc(sx + 3, sy - 24 - steamOffset2, 2.5, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(sx, sy + 3, 20, 6, 0, 0, Math.PI * 2); ctx.fill();
+  drawIsoBox(ctx, sx, sy + 1, 29, 17, 10, '#926d4e', '#624832', '#483322');
+  drawIsoBox(ctx, sx, sy - 9, 17, 11, 12, '#aeb9b0', '#5c6b62', '#3c4942');
+  drawIsoBox(ctx, sx - 3, sy - 11, 7, 6, 3, '#d1d9d2', '#77877c', '#526157');
+  ctx.fillStyle = '#101713'; ctx.fillRect(sx - 6, sy - 16, 12, 3);
+  ctx.strokeStyle = '#81948a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sx + 5, sy - 9); ctx.lineTo(sx + 8, sy - 5); ctx.stroke();
+  const steam = (animTime * 12) % 10;
+  ctx.strokeStyle = 'rgba(220,232,223,.55)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(sx - 3, sy - 19 - steam); ctx.quadraticCurveTo(sx - 7, sy - 23 - steam, sx - 3, sy - 26 - steam);
+  ctx.moveTo(sx + 3, sy - 18 - ((steam + 4) % 10)); ctx.quadraticCurveTo(sx + 7, sy - 23 - steam, sx + 3, sy - 27 - steam); ctx.stroke();
   ctx.restore();
 }
 
-/**
- * Draws an AI architecture whiteboard containing attention diagrams,
- * neural loss curves, and mathematical equations.
- */
-export function drawWhiteboard(
-  ctx: CanvasRenderingContext2D,
-  sx: number,
-  sy: number,
-  animTime: number
-): void {
+export function drawWhiteboard(ctx: CanvasRenderingContext2D, sx: number, sy: number, animTime: number): void {
   ctx.save();
-  const boardW = 28;
-  const boardH = 22;
-
-  // Aluminum stand legs
-  ctx.strokeStyle = '#64748b';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(sx - boardW / 2 + 2, sy);
-  ctx.lineTo(sx - boardW / 2 + 4, sy - 24);
-  ctx.moveTo(sx + boardW / 2 - 2, sy);
-  ctx.lineTo(sx + boardW / 2 - 4, sy - 24);
-  ctx.stroke();
-
-  // Whiteboard magnetic writing surface
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillRect(sx - boardW / 2, sy - 34, boardW, boardH);
-  ctx.strokeStyle = '#94a3b8';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(sx - boardW / 2, sy - 34, boardW, boardH);
-
-  // Handwritten Attention transformer formula & loss curve lines
-  ctx.strokeStyle = '#0284c7';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(sx - boardW / 2 + 4, sy - 30);
-  ctx.lineTo(sx - boardW / 2 + 12, sy - 30);
-  ctx.moveTo(sx - boardW / 2 + 4, sy - 26);
-  ctx.lineTo(sx - boardW / 2 + 20, sy - 26);
-  ctx.stroke();
-
-  // Red descending loss curve with subtle oscillation
-  const lossBounce = Math.sin(animTime * 2) * 0.5;
-  ctx.strokeStyle = '#ef4444';
-  ctx.beginPath();
-  ctx.moveTo(sx - boardW / 2 + 5, sy - 22);
-  ctx.quadraticCurveTo(sx, sy - 18 + lossBounce, sx + boardW / 2 - 4, sy - 15);
-  ctx.stroke();
+  drawIsoBox(ctx, sx, sy, 30, 7, 29, '#d9e0d9', '#7c8a80', '#59685f');
+  ctx.fillStyle = '#eef2ec'; ctx.fillRect(sx - 11, sy - 25, 22, 17);
+  ctx.strokeStyle = '#a3b1a6'; ctx.lineWidth = 1; ctx.strokeRect(sx - 11, sy - 25, 22, 17);
+  ctx.strokeStyle = '#6f9b82'; ctx.lineWidth = 1.1; ctx.beginPath();
+  ctx.moveTo(sx - 8, sy - 21); ctx.lineTo(sx - 2, sy - 21); ctx.lineTo(sx + 2, sy - 16); ctx.lineTo(sx + 8, sy - 19);
+  ctx.moveTo(sx - 8, sy - 12); ctx.lineTo(sx - 3, sy - 15); ctx.lineTo(sx + 3, sy - 11); ctx.stroke();
+  ctx.strokeStyle = '#b17d70'; ctx.beginPath(); ctx.moveTo(sx - 6, sy - 8); ctx.quadraticCurveTo(sx, sy - 15 + Math.sin(animTime) * .5, sx + 7, sy - 10); ctx.stroke();
   ctx.restore();
 }
 
-/**
- * Draws office relaxation and wellness decor: comfortable lounge sofa
- * or vibrant potted indoor monstera plants.
- */
-export function drawLoungeAndDecor(
-  ctx: CanvasRenderingContext2D,
-  sx: number,
-  sy: number,
-  type: 'SOFA' | 'PLANT',
-  animTime: number
-): void {
+export function drawLoungeAndDecor(ctx: CanvasRenderingContext2D, sx: number, sy: number, type: 'SOFA' | 'PLANT', animTime: number): void {
   ctx.save();
   if (type === 'SOFA') {
-    // Designer Scandinavian 2-seater lounge sofa
-    ctx.fillStyle = '#1e3a8a';
-    ctx.beginPath();
-    ctx.ellipse(sx, sy - 6, 16, 9, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#3b82f6';
-    ctx.stroke();
-
-    // Backrest cushion
-    ctx.fillStyle = '#1d4ed8';
-    ctx.fillRect(sx - 14, sy - 16, 28, 8);
-    ctx.strokeStyle = '#60a5fa';
-    ctx.strokeRect(sx - 14, sy - 16, 28, 8);
+    ctx.fillStyle = 'rgba(0,0,0,.24)'; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+    drawIsoBox(ctx, sx, sy, 31, 17, 9, '#718b7a', '#344c3d', '#25392d');
+    drawIsoBox(ctx, sx, sy - 7, 29, 10, 8, '#91a996', '#496b54', '#344c40');
+    drawIsoBox(ctx, sx - 8, sy - 1, 12, 8, 3, '#b6c6b7', '#718b78', '#506b57');
+    drawIsoBox(ctx, sx + 7, sy - 1, 12, 8, 3, '#a2b9a5', '#617e68', '#435d49');
   } else {
-    // Terracotta plant pot with verdant leaves
-    ctx.fillStyle = '#b45309';
-    ctx.beginPath();
-    ctx.moveTo(sx - 6, sy - 8);
-    ctx.lineTo(sx + 6, sy - 8);
-    ctx.lineTo(sx + 4, sy);
-    ctx.lineTo(sx - 4, sy);
-    ctx.closePath();
-    ctx.fill();
-
-    // Animated swaying tropical leaves
-    const sway = Math.sin(animTime * 1.5) * 2;
-    ctx.fillStyle = '#15803d';
-    ctx.beginPath();
-    ctx.arc(sx - 5 + sway * 0.5, sy - 14, 5, 0, Math.PI * 2);
-    ctx.arc(sx + 5 + sway * 0.5, sy - 15, 6, 0, Math.PI * 2);
-    ctx.arc(sx + sway, sy - 19, 7, 0, Math.PI * 2);
-    ctx.fill();
+    drawIsoBox(ctx, sx, sy + 1, 12, 10, 8, '#b77855', '#804a32', '#5c3628');
+    const sway = Math.sin(animTime * 1.2) * 2;
+    const leaves = [{ x: sx - 5, y: sy - 16, rx: -8 }, { x: sx + 5 + sway, y: sy - 17, rx: 7 }, { x: sx + sway, y: sy - 23, rx: 0 }, { x: sx - 1, y: sy - 13, rx: -2 }];
+    leaves.forEach((leaf, index) => {
+      ctx.save(); ctx.translate(leaf.x, leaf.y); ctx.rotate(leaf.rx * Math.PI / 180);
+      const gradient = ctx.createLinearGradient(-4, 0, 4, -10); gradient.addColorStop(0, '#315c40'); gradient.addColorStop(1, index % 2 ? '#8eaf83' : '#658c68');
+      ctx.fillStyle = gradient; ctx.beginPath(); ctx.ellipse(0, 0, 4, 9, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(210,230,203,.35)'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, -7); ctx.stroke(); ctx.restore();
+    });
   }
   ctx.restore();
 }
