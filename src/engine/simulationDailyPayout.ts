@@ -81,7 +81,7 @@ export function processEndOfDayFinances(state: CompanyState): CompanyState {
       (inputTokensPerRequest * inputPrice + outputTokensPerRequest * outputPrice) / 1_000_000;
     const dailyInferenceCost = activeUsers * requestsPerUser *
       (inputTokensPerRequest * inputCostPerMillion + outputTokensPerRequest * outputCostPerMillion) / 1_000_000;
-    return { ...model, activeUsers, dailyApiRevenue, dailyInferenceCost };
+    return { ...model, activeUsers, dailyNewUsers: acquisition, dailyApiRevenue, dailyInferenceCost };
   });
   const dailyApiIncome = models.reduce((sum, model) => sum + model.dailyApiRevenue, 0);
   const dailyInferenceCost = models.reduce((sum, model) => sum + model.dailyInferenceCost, 0);
