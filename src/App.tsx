@@ -130,11 +130,11 @@ export default function App(): React.JSX.Element {
     setState((prev) => ({ ...prev, models: removeModelProject(prev.models, id) }));
   };
 
-  const handleLaunchModel = (id: string, mode: 'FREE' | 'PAID', inputPrice = 0.5, outputPrice = 1.5) => {
+  const handleLaunchModel = (id: string, mode: 'FREE' | 'PAID', inputPrice = 0.5, outputPrice = 1.5, imagePrice = 0.04) => {
     setState((prev) => ({
       ...prev,
       models: prev.models.map((model) => model.id === id && model.isCompleted && !model.isReleased
-        ? { ...model, isReleased: true, pricingMode: mode, pricePerMillionInput: mode === 'PAID' ? inputPrice : 0, pricePerMillionOutput: mode === 'PAID' ? outputPrice : 0, dailyApiRevenue: 0, dailyInferenceCost: 0 }
+        ? { ...model, isReleased: true, pricingMode: mode, pricePerMillionInput: model.modality === 'TEXT' && mode === 'PAID' ? Math.max(0, inputPrice) : 0, pricePerMillionOutput: model.modality === 'TEXT' && mode === 'PAID' ? Math.max(0, outputPrice) : 0, pricePerImage: model.modality === 'IMAGE' && mode === 'PAID' ? Math.max(0.01, imagePrice) : 0, dailyApiRevenue: 0, dailyInferenceCost: 0, dailyImageGenerations: 0 }
         : model),
     }));
   };
