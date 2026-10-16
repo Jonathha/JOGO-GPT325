@@ -21,7 +21,7 @@ export function TrainingModal(props: TrainingModalProps): React.JSX.Element {
   const { models, currentDay, onClose, onCreateModel, onLaunchModel, onToggleTraining, onDeleteModel } = props;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-stretch bg-[#0c1311] sm:p-3">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-stretch bg-[#0c1311]">
       <div className="bg-[#111b18] border border-[#2c4037] sm:rounded-xl w-full p-4 sm:p-6 shadow-2xl flex flex-col h-full sm:max-h-[calc(100vh-24px)] overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
           <div>
