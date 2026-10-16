@@ -37,7 +37,7 @@ export function TrainingModal(props: TrainingModalProps): React.JSX.Element {
 
         <div className="overflow-y-auto space-y-4 pr-1 flex-1">
           {/* New Model Form */}
-          <TrainingNewModelForm currentDay={currentDay} onCreateModel={onCreateModel} />
+          <TrainingNewModelForm currentDay={currentDay} models={models} onCreateModel={onCreateModel} />
 
           {/* Model Roster */}
           <div className="space-y-2">
