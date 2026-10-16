@@ -1,4 +1,5 @@
 import { CompanyState } from '../types/gameTypes';
+import { RIVAL_MODELS } from '../data/rivalModels';
 
 /**
  * Calculates current market valuation based on AI models, revenue multiple, and team reputation.
@@ -53,14 +54,18 @@ export function recalculateCompanyValuation(state: CompanyState): number {
  * - Recomputes company market valuation and checks phase milestones
  */
 export function processEndOfDayFinances(state: CompanyState): CompanyState {
+  const bestRivalQuality = Math.max(...RIVAL_MODELS.map((rival) => (rival.mmlu + rival.coding + rival.math) / 300));
+  const cheapestRivalOutput = Math.min(...RIVAL_MODELS.map((rival) => rival.outputPrice));
   const models = state.models.map((model) => {
     if (!model.isCompleted || !model.isReleased) return model;
     const quality = (model.mmluScore + model.codingScore + model.mathScore) / 300;
     const reputationFactor = 0.7 + state.reputation / 100;
+    const competitiveFactor = quality >= bestRivalQuality ? 1.25 : quality >= bestRivalQuality - 0.05 ? 1 : 0.78;
+    const priceFactor = model.pricingMode === 'PAID' && model.pricePerMillionOutput <= cheapestRivalOutput ? 1.2 : model.pricePerMillionOutput > 2 ? 0.65 : 1;
     const pricePenalty = model.pricingMode === 'PAID' ? Math.max(0, model.pricePerMillionOutput - 1) * 2 : 0;
     const acquisition = model.pricingMode === 'FREE'
-      ? Math.round((10 + quality * 24) * reputationFactor)
-      : Math.max(0, Math.round((3 + quality * 9 - pricePenalty) * reputationFactor));
+      ? Math.round((10 + quality * 24) * reputationFactor * competitiveFactor)
+      : Math.max(0, Math.round((3 + quality * 9 - pricePenalty) * reputationFactor * competitiveFactor * priceFactor));
     const activeUsers = model.activeUsers + acquisition;
     const requestsPerUser = 6;
     const revenuePerRequest = model.pricingMode === 'PAID'
