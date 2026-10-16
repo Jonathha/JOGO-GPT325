@@ -1,4 +1,4 @@
-import { CompanyState } from '../types/gameTypes';
+import { CompanyState, TrainingStage } from '../types/gameTypes';
 import { processEndOfDayFinances } from './simulationDailyPayout';
 
 /**
@@ -75,7 +75,7 @@ export function updateModelTrainingStep(
     const progressRatio = Math.min(1.0, newInvestedFlops / model.computeNeededFlops);
     const progressPercent = Number.isFinite(progressRatio) ? (progressRatio >= 1 ? 100 : Math.floor(progressRatio * 100)) : 0;
     const isNowFinished = progressRatio >= 1.0;
-    const trainingStage = progressRatio < 0.05 ? 'DATA_PREPARATION'
+    const trainingStage: TrainingStage = progressRatio < 0.05 ? 'DATA_PREPARATION'
       : progressRatio < 0.85 ? 'PRETRAINING'
       : progressRatio < 0.93 ? 'POST_TRAINING'
       : progressRatio < 1 ? 'EVALUATION' : 'READY';
