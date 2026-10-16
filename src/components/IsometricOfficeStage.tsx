@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CompanyState } from '../types/gameTypes';
+import { CompanyState, OfficeTile } from '../types/gameTypes';
 import { getOfficeLayoutForPhase } from '../data/officeLayouts';
 import { gridToIsometricScreen, isometricScreenToGrid } from '../engine/isometricMath';
 import { drawFloorTile, drawPerimeterWalls } from '../engine/drawOfficeFloors';
@@ -25,6 +25,7 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
   const [camera, setCamera] = useState({ offsetX: 0, offsetY: 0, zoom: 1.0 });
   const latestProps = useRef(props);
   const cameraRef = useRef(camera);
+  const layoutRef = useRef<{ phase: CompanyState['phase']; tiles: OfficeTile[] } | null>(null);
   latestProps.current = props;
   cameraRef.current = camera;
   const [isDragging, setIsDragging] = useState(false);
@@ -68,7 +69,10 @@ export function IsometricOfficeStage(props: StageProps): React.JSX.Element {
       const animTime = (now - startTime) * 0.001;
       const currentState = latestProps.current.state;
       const currentCamera = cameraRef.current;
-      const currentTiles = getOfficeLayoutForPhase(currentState.phase);
+      if (!layoutRef.current || layoutRef.current.phase !== currentState.phase) {
+        layoutRef.current = { phase: currentState.phase, tiles: getOfficeLayoutForPhase(currentState.phase) };
+      }
+      const currentTiles = layoutRef.current.tiles;
       const currentGridSize = currentState.phase === 'GARAGEM' ? 6 : currentState.phase === 'LOFT_STARTUP' ? 8 : currentState.phase === 'CAMPUS_IA' ? 10 : 12;
       const viewWidth = canvas.clientWidth;
       const viewHeight = canvas.clientHeight;
