@@ -47,8 +47,21 @@ export function CityStage({ companyName, day, valuation }: CityStageProps): Reac
       const cols = Math.max(2, Math.floor((w - 18) / 13));
       const rows = Math.max(2, Math.floor((h - 18) / 13));
       for (let row = 0; row < rows; row++) for (let col = 0; col < cols; col++) {
+        const wx = x + 10 + col * ((w - 20) / cols);
+        const wy = y + 10 + row * ((h - 20) / rows);
         ctx.fillStyle = ((row * 7 + col * 3 + seed) % 5 === 0) ? '#e4c78b' : '#6b9b9b';
-        ctx.fillRect(x + 10 + col * ((w - 20) / cols), y + 10 + row * ((h - 20) / rows), 5, 5);
+        ctx.fillRect(wx, wy, 5, 5);
+        ctx.fillStyle = 'rgba(255,255,255,.25)';
+        ctx.fillRect(wx, wy, 5, 1);
+      }
+      // Rooftop equipment and service lanes add detail to the top-down architecture.
+      ctx.fillStyle = 'rgba(31, 48, 47, .25)';
+      roundedRect(x + w * .12, y + h * .72, w * .76, h * .06, 3); ctx.fill();
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = '#788987';
+        roundedRect(x + w * (.18 + i * .25), y + h * .18, w * .13, h * .12, 3); ctx.fill();
+        ctx.fillStyle = '#aebbb3';
+        roundedRect(x + w * (.19 + i * .25), y + h * .19, w * .11, h * .035, 2); ctx.fill();
       }
       if (hero) {
         ctx.fillStyle = '#193b42';
@@ -59,6 +72,9 @@ export function CityStage({ companyName, day, valuation }: CityStageProps): Reac
         ctx.fillText('AI', x + w / 2, y + h * .54);
         ctx.fillStyle = '#edf6f1';
         ctx.fillRect(x + w * .2, y + h * .82, w * .6, 3);
+        ctx.fillStyle = '#f4f1df';
+        ctx.font = '600 8px system-ui';
+        ctx.fillText('HEADQUARTERS', x + w / 2, y + h * .92);
       }
     };
     const tree = (x: number, y: number, scale = 1) => {
@@ -76,7 +92,11 @@ export function CityStage({ companyName, day, valuation }: CityStageProps): Reac
       ctx.fillStyle = '#b7c9a7'; roundedRect(x + 9, y + 9, w - 18, h - 18, 9); ctx.fill();
       ctx.strokeStyle = '#e6e8d4'; ctx.lineWidth = 5; ctx.beginPath();
       ctx.moveTo(x + 12, y + h * .72); ctx.lineTo(x + w * .42, y + h * .42); ctx.lineTo(x + w - 12, y + h * .25); ctx.stroke();
-      for (let i = 0; i < 7; i++) tree(x + 18 + ((i * 37 + seed * 13) % Math.max(25, w - 36)), y + 17 + ((i * 23 + seed * 7) % Math.max(25, h - 34)), .8);
+      ctx.strokeStyle = 'rgba(244, 242, 224, .9)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x + w * .48, y + 12); ctx.lineTo(x + w * .52, y + h - 12); ctx.stroke();
+      ctx.fillStyle = '#a9bca0'; ctx.beginPath(); ctx.arc(x + w * .5, y + h * .5, Math.min(w, h) * .1, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#dfe6d0'; ctx.beginPath(); ctx.arc(x + w * .5, y + h * .5, Math.min(w, h) * .055, 0, Math.PI * 2); ctx.fill();
+      for (let i = 0; i < 12; i++) tree(x + 18 + ((i * 37 + seed * 13) % Math.max(25, w - 36)), y + 17 + ((i * 23 + seed * 7) % Math.max(25, h - 34)), .8);
     };
     const car = (x: number, y: number, horizontal: boolean, color: string) => {
       ctx.save(); ctx.translate(x, y); if (!horizontal) ctx.rotate(Math.PI / 2);
